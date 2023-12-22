@@ -1,6 +1,6 @@
 # HTTP Storage Service (hss)
 
-[![License](https://img.shields.io/badge/license-MPL--2.0-brightgreen.svg)](https://github.com/your-username/http-storage-service/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-MPL--2.0-brightgreen.svg)](https://github.com/rkachach/hss/blob/main/LICENSE)
 [![GitHub Issues](https://img.shields.io/github/issues/your-username/http-storage-service.svg)](https://github.com/rkachach/hss/issues)
 [![GitHub Stars](https://img.shields.io/github/stars/your-username/http-storage-service.svg)](https://github.com/rkachach/hss/stargazers)
 
