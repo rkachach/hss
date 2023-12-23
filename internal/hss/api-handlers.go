@@ -19,6 +19,15 @@ func PutDirectory(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	}
 }
+
+func DeleteDirectory(w http.ResponseWriter, r *http.Request) {
+
+	directoryName := mux.Vars(r)["directory"]
+	objectStore.DeleteDirectory(directoryName)
+	// Write success response.
+	w.WriteHeader(http.StatusOK)
+}
+
 func convertToMap(arr []string) map[string]bool {
 	resultMap := make(map[string]bool)
 	for _, key := range arr {

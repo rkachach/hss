@@ -88,3 +88,30 @@ func CreateDirectory(directoryName string) error {
 	writeDirectoryInfo(directoryDir, &directoryInfo)
 	return nil
 }
+
+func DeleteDirectory(directoryName string) error {
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	directoryDir := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
+	exists, err := fsutils.DirectoryExists(directoryDir)
+	if !exists {
+		config.Logger.Printf("getDirectory: Directory not found")
+		//http.NotFound(w, r)
+		return &ObjectError{Op: "Error creating directory", Key: directoryName}
+	}
+
+	// delete the directory from the data store
+	err = os.RemoveAll(directoryDir)
+	if err != nil {
+		fmt.Println("Error deleting directory:", err)
+		//http.Error(w, "Error deleting directory", http.StatusNotFound)
+		return &ObjectError{Op: "Error deleting directory", Key: directoryName}
+	} else {
+		fmt.Printf("Directory '%v' deleted successfully\n", directoryName)
+	}
+
+	// Todo: delete all the directory objects recursively!
+	return nil
+}

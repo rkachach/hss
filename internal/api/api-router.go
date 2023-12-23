@@ -18,7 +18,7 @@ func InitAPIRouter() {
 	apiRouter := router.PathPrefix(SlashSeparator).Subrouter()
 
 	var routers []*mux.Router
-	routers = append(routers, apiRouter.PathPrefix("/{directory}").Subrouter())
+	routers = append(routers, apiRouter.PathPrefix("/{directory:.+}").Subrouter())
 	for _, router := range routers {
 
 		////////////////////////////////////////
@@ -27,7 +27,7 @@ func InitAPIRouter() {
 
 		// Bucket operations
 		router.Methods(http.MethodPut).HandlerFunc(hss.Wrapper("PutDirectory", hss.PutDirectory))
-		//router.Methods(http.MethodDelete).HandlerFunc(hss.Wrapper("DeleteDirectory", hss.DeleteDirectory))
+		router.Methods(http.MethodDelete).HandlerFunc(hss.Wrapper("DeleteDirectory", hss.DeleteDirectory))
 		//router.Methods(http.MethodHead).HandlerFunc(hss.Wrapper("HeadDirectory", hss.HeadDirectory))
 	}
 
