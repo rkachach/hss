@@ -41,6 +41,8 @@ func ReadConfig(filename string) error {
 		return err
 	}
 
+	fmt.Printf("Config: %v\n", AppConfig)
+
 	return nil
 }
 

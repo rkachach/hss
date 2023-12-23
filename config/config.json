@@ -4,7 +4,7 @@
     "logging": {
         "log_file": "app.log"
     },
-    "storage": {
-        "root": "/tmp/object-store"
+    "object_store": {
+        "root": "/tmp/data-store"
     }
 }
