@@ -1,0 +1,10 @@
+{
+    "server_port": 9000,
+    "console_port": 8080,
+    "logging": {
+        "log_file": "app.log"
+    },
+    "storage": {
+        "root": "/tmp/object-store"
+    }
+}
