@@ -2,10 +2,33 @@ package fsutils
 
 import (
 	"io"
+	"time"
+	"path/filepath"
 	"strings"
 	"os"
 	"fmt"
 )
+
+func ListDirectoryEntries(dirPath string) ([]string, error) {
+	var files []string
+
+	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			// Add file name to the list
+			files = append(files, info.Name())
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
+}
 
 func ListDirectories(dirPath string) ([]string, error) {
 	var directories []string
@@ -128,4 +151,37 @@ func SplitPath(input string) (string, string) {
 	first := input[:index]
 	second := input[index+1:]
 	return first, second
+}
+
+func GetDirectoryStats(dirPath string) (int64, int, time.Time, error) {
+	var size int64
+	var filesCount int
+	var creationTime time.Time
+
+	err := filepath.Walk(dirPath, func(path string, fileInfo os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if fileInfo.IsDir() {
+			// Skip directories
+			return nil
+		}
+
+		// Calculate size and count files
+		size += fileInfo.Size()
+		filesCount++
+
+		// Capture creation time of the directory
+		if creationTime.IsZero() {
+			creationTime = fileInfo.ModTime()
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return 0, 0, time.Time{}, err
+	}
+
+	return size, filesCount, creationTime, nil
 }

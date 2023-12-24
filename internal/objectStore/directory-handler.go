@@ -21,12 +21,15 @@ func (e *ObjectError) Error() string { return e.Op + " " + e.Key + ": " + e.Err.
 type DirectoryInfo struct {
 	// Name of the directory
 	Name string `json:"name"`
+
+	// Properties of the directory
+	Path        string    `json:"path"`
+	Size        int64     `json:"size"`
+	FilesCount  int       `json:"files_count"`
+
 	// Date and time when the directory was created/deleted
-	Created time.Time `json:"created"`
-	Deleted time.Time `json:"deleted,omitempty"`
-	// Directory features
-	Versioning    bool `json:"versioning"`
-	ObjectLocking bool `json:"objectLocking"`
+	CreatedTime time.Time `json:"created"`
+	DeletedTime time.Time `json:"deleted,omitempty"`
 }
 
 var(
@@ -37,7 +40,7 @@ func getDirectoryPath(root, directoryName string) string {
 	return fmt.Sprintf("%s/%s", root, directoryName)
 }
 
-func writeDirectoryInfo(directoryDir string, directoryInfo *DirectoryInfo) {
+func writeDirectoryInfo(dirName string, directoryInfo *DirectoryInfo) {
 
 	// Marshal struct to JSON
 	jsonData, err := json.MarshalIndent(directoryInfo, "", "  ")
@@ -47,7 +50,7 @@ func writeDirectoryInfo(directoryDir string, directoryInfo *DirectoryInfo) {
 	}
 
 	// Write directory info file
-	file, err := os.Create(directoryDir + "/info.json")
+	file, err := os.Create(dirName + "/info.json")
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -68,11 +71,11 @@ func CreateDirectory(directoryName string) error {
 
 	var directoryInfo DirectoryInfo
 	directoryInfo.Name = directoryName
-	directoryInfo.Created = time.Now()
+	directoryInfo.CreatedTime = time.Now()
 
 	// Create a directory if it doesn't exist
-	directoryDir := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
-	exists, err := fsutils.DirectoryExists(directoryDir)
+	dirPath := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
+	exists, err := fsutils.DirectoryExists(dirPath)
 	if exists {
 		config.Logger.Printf("CreateDirectory: %v already exists", config.AppConfig.StoreConfig.Root)
 		return &ObjectError{Op: "already exists", Key: directoryName}
@@ -80,13 +83,38 @@ func CreateDirectory(directoryName string) error {
 		config.Logger.Printf("Directory '%v' created successfully", directoryName)
 	}
 
-	err = os.MkdirAll(directoryDir, 0755)
+	err = os.MkdirAll(dirPath, 0755)
 	if err != nil {
 		return &ObjectError{Op: "Error creating directory", Key: directoryName}
 	}
 
-	writeDirectoryInfo(directoryDir, &directoryInfo)
+	writeDirectoryInfo(dirPath, &directoryInfo)
 	return nil
+}
+
+func GetyDirectoryInfo(directoryName string) (DirectoryInfo, error) {
+
+	// Create a directory if it doesn't exist
+	dirPath := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
+	exists, err := fsutils.DirectoryExists(dirPath)
+	if !exists {
+		config.Logger.Printf("GetyDirectoryInfo: %v does not exist", dirPath)
+		return DirectoryInfo{}, err
+	}
+
+	// Get directory info using a separate function
+	var info DirectoryInfo
+	info.Path = dirPath
+	size, filesCount, creationTime, err := fsutils.GetDirectoryStats(dirPath)
+	if err != nil {
+		return info, err
+	}
+
+	info.Size = size
+	info.FilesCount = filesCount
+	info.CreatedTime = creationTime
+
+	return info, nil
 }
 
 func DeleteDirectory(directoryName string) error {
@@ -94,8 +122,8 @@ func DeleteDirectory(directoryName string) error {
 	lock.Lock()
 	defer lock.Unlock()
 
-	directoryDir := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
-	exists, err := fsutils.DirectoryExists(directoryDir)
+	dirPath := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
+	exists, err := fsutils.DirectoryExists(dirPath)
 	if !exists {
 		config.Logger.Printf("getDirectory: Directory not found")
 		//http.NotFound(w, r)
@@ -103,7 +131,7 @@ func DeleteDirectory(directoryName string) error {
 	}
 
 	// delete the directory from the data store
-	err = os.RemoveAll(directoryDir)
+	err = os.RemoveAll(dirPath)
 	if err != nil {
 		fmt.Println("Error deleting directory:", err)
 		//http.Error(w, "Error deleting directory", http.StatusNotFound)
@@ -114,4 +142,10 @@ func DeleteDirectory(directoryName string) error {
 
 	// Todo: delete all the directory objects recursively!
 	return nil
+}
+
+func ListDirectory(directoryName string) ([]string, error) {
+	dirPath := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
+	fmt.Printf("Listing '%v' directory\n", dirPath)
+	return fsutils.ListDirectoryEntries(dirPath)
 }

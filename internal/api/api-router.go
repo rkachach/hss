@@ -25,10 +25,12 @@ func InitAPIRouter() {
 		////////////////// Directory operations
 		////////////////////////////////////////
 
-		// Bucket operations
-		router.Methods(http.MethodPut).HandlerFunc(hss.Wrapper("PutDirectory", hss.PutDirectory))
-		router.Methods(http.MethodDelete).HandlerFunc(hss.Wrapper("DeleteDirectory", hss.DeleteDirectory))
-		//router.Methods(http.MethodHead).HandlerFunc(hss.Wrapper("HeadDirectory", hss.HeadDirectory))
+		// Directory operations
+		router.Methods(http.MethodPut).HandlerFunc(hss.Wrapper("PutDirectory", hss.PutDirectory)).Queries("type", "directory")
+		router.Methods(http.MethodGet).HandlerFunc(hss.Wrapper("ListDirectory", hss.ListDirectory)).Queries("type", "directory", "operation", "list")
+		router.Methods(http.MethodGet).HandlerFunc(hss.Wrapper("GetDirectory", hss.GetDirectory)).Queries("type", "directory")
+		router.Methods(http.MethodHead).HandlerFunc(hss.Wrapper("HeadDirectory", hss.HeadDirectory)).Queries("type", "directory")
+		router.Methods(http.MethodDelete).HandlerFunc(hss.Wrapper("DeleteDirectory", hss.DeleteDirectory)).Queries("type", "directory")
 	}
 
 	////////////////// Root operations
