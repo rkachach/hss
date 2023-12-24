@@ -11,9 +11,8 @@ import (
 
 func PutDirectory(w http.ResponseWriter, r *http.Request) {
 
-	directoryName := mux.Vars(r)["directory"]
-
-	err := objectStore.CreateDirectory(directoryName)
+	dirPath := mux.Vars(r)["path"]
+	err := objectStore.CreateDirectory(dirPath)
 	if err != nil {
 		// writeErrorResponse(w, errorCodes.ToAPIErr(ErrDirectoryAlreadyExists), r.URL)
 	} else {
@@ -23,15 +22,15 @@ func PutDirectory(w http.ResponseWriter, r *http.Request) {
 
 func DeleteDirectory(w http.ResponseWriter, r *http.Request) {
 
-	directoryName := mux.Vars(r)["directory"]
-	objectStore.DeleteDirectory(directoryName)
+	dirPath := mux.Vars(r)["path"]
+	objectStore.DeleteDirectory(dirPath)
 	// Write success response.
 	w.WriteHeader(http.StatusOK)
 }
 
 func HeadDirectory(w http.ResponseWriter, r *http.Request) {
-	directoryName := mux.Vars(r)["directory"]
-	dirInfo, err := objectStore.GetyDirectoryInfo(directoryName)
+	dirPath := mux.Vars(r)["path"]
+	dirInfo, err := objectStore.GetyDirectoryInfo(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -45,9 +44,8 @@ func HeadDirectory(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetDirectory(w http.ResponseWriter, r *http.Request) {
-	directoryName := mux.Vars(r)["directory"]
-
-	dirInfo, err := objectStore.GetyDirectoryInfo(directoryName)
+	dirPath := mux.Vars(r)["path"]
+	dirInfo, err := objectStore.GetyDirectoryInfo(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -75,8 +73,8 @@ func GetDirectory(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListDirectory(w http.ResponseWriter, r *http.Request) {
-	directoryName := mux.Vars(r)["directory"]
-	entries, err := objectStore.ListDirectory(directoryName)
+	dirPath := mux.Vars(r)["path"]
+	entries, err := objectStore.ListDirectory(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

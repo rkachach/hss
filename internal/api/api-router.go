@@ -18,7 +18,7 @@ func InitAPIRouter() {
 	apiRouter := router.PathPrefix(SlashSeparator).Subrouter()
 
 	var routers []*mux.Router
-	routers = append(routers, apiRouter.PathPrefix("/{directory:.+}").Subrouter())
+	routers = append(routers, apiRouter.PathPrefix("/{path:.+}").Subrouter())
 	for _, router := range routers {
 
 		////////////////////////////////////////
