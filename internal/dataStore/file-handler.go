@@ -172,3 +172,31 @@ func UpdateFileInfo(filePath string, fileInfo FileInfo) error {
 
 	return nil
 }
+
+func DeleteFile(filePath string) error {
+
+	lock.Lock()
+	defer lock.Unlock()
+
+	_, err := readFileInfo(filePath)
+	if err != nil {
+		return err
+	}
+
+	_, err = readFileInfo(filePath)
+	if err != nil {
+		return err
+	}
+
+	err = os.Remove(getFileInfoPath(filePath))
+	if err != nil {
+		return &FileError{Op: "Error deleting object", Key: filePath}
+	}
+
+	err = os.Remove(getFilePath(filePath))
+	if err != nil {
+		return &FileError{Op: "Error deleting object", Key: filePath}
+	}
+
+	return nil
+}

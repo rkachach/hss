@@ -92,9 +92,33 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 
 func HeadFile(w http.ResponseWriter, r *http.Request) {
 
+	filePath := mux.Vars(r)["path"]
+	fileBytes, err := dataStore.ReadFile(filePath)
+	if err != nil {
+		http.Error(w, "Error reading file ", http.StatusNotFound)
+		return
+	}
+
+	// Calculate MD5 checksum
+	hash := md5.Sum(fileBytes)
+	hashString := hex.EncodeToString(hash[:])
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-MD5", hashString)
+	// Add here any header that could be useful in the future
+
 }
 
 func DeleteFile(w http.ResponseWriter, r *http.Request) {
+
+	filePath := mux.Vars(r)["path"]
+
+	err := dataStore.DeleteFile(filePath)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error deleting object: %v", filePath), http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 
 }
 
