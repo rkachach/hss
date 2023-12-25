@@ -11,13 +11,13 @@ import (
 	fsutils "github.com/rkachach/hss/internal/utils"
 )
 
-type ObjectError struct {
+type DirectoryError struct {
 	Op     string
 	Key   string
 	Err    error
 }
 
-func (e *ObjectError) Error() string { return e.Op + " " + e.Key + ": " + e.Err.Error() }
+func (e *DirectoryError) Error() string { return e.Op + " " + e.Key + ": " + e.Err.Error() }
 
 type DirectoryInfo struct {
 	// Name of the directory
@@ -50,7 +50,7 @@ func getDirectoryInfoPath(dirPath string) string {
 	return fmt.Sprintf("%s/%s/__info__.json", config.AppConfig.StoreConfig.Root, dir)
 }
 
-func writeDirectoryInfo(dirPath string, directoryInfo *DirectoryInfo) {
+func writeDirectoryInfo(relativeDirPath string, directoryInfo *DirectoryInfo) {
 
 	// Marshal struct to JSON
 	jsonData, err := json.MarshalIndent(directoryInfo, "", "  ")
@@ -60,7 +60,7 @@ func writeDirectoryInfo(dirPath string, directoryInfo *DirectoryInfo) {
 	}
 
 	// Write directory info file
-	file, err := os.Create(getDirectoryInfoPath(dirPath))
+	file, err := os.Create(getDirectoryInfoPath(relativeDirPath))
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -89,14 +89,14 @@ func CreateDirectory(relativeDirPath string, userMetadata map[string]string) err
 	exists, err := fsutils.DirectoryExists(dirPath)
 	if exists {
 		config.Logger.Printf("CreateDirectory: %v already exists", config.AppConfig.StoreConfig.Root)
-		return &ObjectError{Op: "already exists", Key: relativeDirPath}
+		return &DirectoryError{Op: "already exists", Key: relativeDirPath}
 	} else {
 		config.Logger.Printf("Directory '%v' created successfully", relativeDirPath)
 	}
 
 	err = os.MkdirAll(dirPath, 0755)
 	if err != nil {
-		return &ObjectError{Op: "Error creating directory", Key: relativeDirPath}
+		return &DirectoryError{Op: "Error creating directory", Key: relativeDirPath}
 	}
 
 	writeDirectoryInfo(relativeDirPath, &directoryInfo)
@@ -137,7 +137,7 @@ func DeleteDirectory(relativeDirPath string) error {
 	exists, err := fsutils.DirectoryExists(dirPath)
 	if !exists {
 		config.Logger.Printf("getDirectory: Directory not found")
-		return &ObjectError{Op: "Error creating directory", Key: relativeDirPath}
+		return &DirectoryError{Op: "Error creating directory", Key: relativeDirPath}
 	}
 
 	// delete the directory from the data store
@@ -145,12 +145,11 @@ func DeleteDirectory(relativeDirPath string) error {
 	if err != nil {
 		fmt.Println("Error deleting directory:", err)
 		//http.Error(w, "Error deleting directory", http.StatusNotFound)
-		return &ObjectError{Op: "Error deleting directory", Key: relativeDirPath}
+		return &DirectoryError{Op: "Error deleting directory", Key: relativeDirPath}
 	} else {
 		fmt.Printf("Directory '%v' deleted successfully\n", relativeDirPath)
 	}
 
-	// Todo: delete all the directory objects recursively!
 	return nil
 }
 
