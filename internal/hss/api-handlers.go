@@ -68,6 +68,26 @@ func PutFile(w http.ResponseWriter, r *http.Request) {
 
 func GetFile(w http.ResponseWriter, r *http.Request) {
 
+	filePath := mux.Vars(r)["path"]
+	fileBytes, err := dataStore.ReadFile(filePath)
+	if err != nil {
+		http.Error(w, "Error reading file ", http.StatusNotFound)
+		return
+	}
+
+	// Calculate MD5 checksum
+	hash := md5.Sum(fileBytes)
+	hashString := hex.EncodeToString(hash[:])
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-MD5", hashString)
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(fileBytes)))
+
+	//Copy the file content to the response writer
+	_, err = w.Write(fileBytes)
+	if err != nil {
+		http.Error(w, "Error copying file content", http.StatusInternalServerError)
+		return
+	}
 }
 
 func HeadFile(w http.ResponseWriter, r *http.Request) {

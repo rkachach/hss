@@ -26,6 +26,11 @@ log_cmd "File Upload"
 curl -X PUT -H "Content-Type: application/octet-stream" --data-binary "@./$TEST_FILE" http://localhost:9000/$DIRECTORY_NAME/$TEST_FILE\?type\=file
 [ -e "$DATA_STORE/$DIRECTORY_NAME/$TEST_FILE" ] || { echo "Directory $DATA_STORE/$DIRECTORY_NAME/$TEST_FILE does not exist."; exit 1; }
 
+log_cmd "File Download"
+curl -s -X GET http://localhost:9000/$DIRECTORY_NAME/$TEST_FILE\?type\=file -o output_file
+FILE_MD5=$(md5sum output_file | awk '{ print $1 }')
+[ "$FILE_MD5" = "$EXPECTED_FILE_MD5" ] || { echo "Fileect checksum mismatch: exp=$EXPECTED_FILE_MD5 got=$FILE_MD5"; exit 1; }
+
 exit 0
 
 log_cmd "Remove directory"
