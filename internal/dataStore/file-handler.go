@@ -29,6 +29,9 @@ type FileInfo struct {
 	Checksum     []byte    `json:"checksum"`
 	UploadID     string    `json:"uploadID"`
 	MD5sum       string    `json:"MD5sum"`
+
+	// Metadata for the directory
+	Metadata map[string]string `json:"metadata,omitempty"`
 }
 
 func IsMetadataFile(filename string) bool {
@@ -42,7 +45,7 @@ func getFilePath(filePath string) string {
 func getFileInfoPath(filePath string) string {
 	dir := filepath.Dir(filePath)
 	filename := filepath.Base(filePath)
-	return fmt.Sprintf("%s/%s/__%s.json", config.AppConfig.StoreConfig.Root, dir, filename)
+	return fmt.Sprintf("%s/%s/__%s__.json", config.AppConfig.StoreConfig.Root, dir, filename)
 }
 
 func writeFiletInfo(filePath string, fileInfo *FileInfo) error {
@@ -90,7 +93,7 @@ func readFileInfo(filePath string) (FileInfo, error) {
 	return fileInfo, nil
 }
 
-func StartFileUpload(filePath string) (FileInfo, error){
+func StartFileUpload(filePath string, userMetadata map[string]string) (FileInfo, error){
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -105,7 +108,8 @@ func StartFileUpload(filePath string) (FileInfo, error){
 		Key: filePath,
 		LastModified: time.Now().UTC(),
 		UploadID: uuid.New().String(),
-		Size: 0}
+		Size: 0,
+		Metadata: userMetadata}
 
 	err = writeFiletInfo(filePath, &fileInfo)
 	return fileInfo, err

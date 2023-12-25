@@ -2,6 +2,7 @@ package dataStore
 
 import (
 	"sync"
+	"path/filepath"
 	"encoding/json"
 	"os"
 	"fmt"
@@ -39,8 +40,14 @@ var(
     lock sync.Mutex
 )
 
-func getDirectoryPath(root, directoryName string) string {
-	return fmt.Sprintf("%s/%s", root, directoryName)
+func getDirectoryPath(directoryName string) string {
+	dir := filepath.Dir(directoryName)
+	return fmt.Sprintf("%s/%s", config.AppConfig.StoreConfig.Root, dir)
+}
+
+func getDirectoryInfoPath(directoryName string) string {
+	dir := filepath.Dir(directoryName)
+	return fmt.Sprintf("%s/%s/__info__.json", config.AppConfig.StoreConfig.Root, dir)
 }
 
 func writeDirectoryInfo(dirName string, directoryInfo *DirectoryInfo) {
@@ -53,7 +60,7 @@ func writeDirectoryInfo(dirName string, directoryInfo *DirectoryInfo) {
 	}
 
 	// Write directory info file
-	file, err := os.Create(dirName + "/info.json")
+	file, err := os.Create(getDirectoryInfoPath(dirName))
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -78,7 +85,7 @@ func CreateDirectory(directoryName string, userMetadata map[string]string) error
 	directoryInfo.Metadata = userMetadata
 
 	// Create a directory if it doesn't exist
-	dirPath := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
+	dirPath := getDirectoryPath(directoryName)
 	exists, err := fsutils.DirectoryExists(dirPath)
 	if exists {
 		config.Logger.Printf("CreateDirectory: %v already exists", config.AppConfig.StoreConfig.Root)
@@ -92,14 +99,14 @@ func CreateDirectory(directoryName string, userMetadata map[string]string) error
 		return &ObjectError{Op: "Error creating directory", Key: directoryName}
 	}
 
-	writeDirectoryInfo(dirPath, &directoryInfo)
+	writeDirectoryInfo(directoryName, &directoryInfo)
 	return nil
 }
 
 func GetyDirectoryInfo(directoryName string) (DirectoryInfo, error) {
 
 	// Create a directory if it doesn't exist
-	dirPath := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
+	dirPath := getDirectoryPath(directoryName)
 	exists, err := fsutils.DirectoryExists(dirPath)
 	if !exists {
 		config.Logger.Printf("GetyDirectoryInfo: %v does not exist", dirPath)
@@ -126,7 +133,7 @@ func DeleteDirectory(directoryName string) error {
 	lock.Lock()
 	defer lock.Unlock()
 
-	dirPath := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
+	dirPath := getDirectoryPath(directoryName)
 	exists, err := fsutils.DirectoryExists(dirPath)
 	if !exists {
 		config.Logger.Printf("getDirectory: Directory not found")
@@ -149,7 +156,7 @@ func DeleteDirectory(directoryName string) error {
 }
 
 func ListDirectory(directoryName string) ([]string, error) {
-	dirPath := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
+	dirPath := getDirectoryPath(directoryName)
 	fmt.Printf("Listing '%v' directory\n", dirPath)
 	return fsutils.ListDirectoryEntries(dirPath)
 }

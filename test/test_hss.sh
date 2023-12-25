@@ -13,7 +13,13 @@ EXPECTED_FILE_MD5="5dd39cab1c53c2c77cd352983f9641e1"
 log_cmd "removing any existing object store: $DATA_STORE"
 [ -d  "$DATA_STORE" ] && rm -r "$DATA_STORE"
 
-curl -X PUT http://localhost:9000/$DIRECTORY_NAME/\?type\=directory
+curl -X PUT \
+  -H "Content-Type: application/json" \
+  -H "Metadata-Fields: custom-dir-field1,custom-dir-field2" \
+  -H "custom-dir-field1: value1" \
+  -H "custom-dir-field2: value2" \
+  http://localhost:9000/$DIRECTORY_NAME/\?type\=directory
+
 [ -d "$DATA_STORE/$DIRECTORY_NAME/" ] || { echo "Directory $DATA_STORE/$DIRECTORY_NAME/ does not exist."; exit 1; }
 
 log_cmd "Get directory info"

@@ -13,12 +13,9 @@ import (
 	"encoding/hex"
 )
 
-func PutDirectory(w http.ResponseWriter, r *http.Request) {
-
-	dirPath := mux.Vars(r)["path"]
-	metadataFields := r.Header.Get("Metadata-Fields")
-
+func getMedataFromQuery(r *http.Request) map[string]string {
 	// Split the header value by comma to get individual metadata field names
+	metadataFields := r.Header.Get("Metadata-Fields")
 	userMetadata := make(map[string]string)
 	metadataFieldList := strings.Split(metadataFields, ",")
 	for _, field := range metadataFieldList {
@@ -28,7 +25,17 @@ func PutDirectory(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Metadata field '%s': %s\n", field, metadataValue) // Process metadata values
 	}
 
-	err := dataStore.CreateDirectory(dirPath, userMetadata)
+	if len(userMetadata) != 0 {
+		return userMetadata
+	}
+
+	return nil
+}
+
+func PutDirectory(w http.ResponseWriter, r *http.Request) {
+
+	dirPath := mux.Vars(r)["path"]
+	err := dataStore.CreateDirectory(dirPath, getMedataFromQuery(r))
 	if err != nil {
 		// writeErrorResponse(w, errorCodes.ToAPIErr(ErrDirectoryAlreadyExists), r.URL)
 	} else {
@@ -47,9 +54,7 @@ func DeleteDirectory(w http.ResponseWriter, r *http.Request) {
 func PutFile(w http.ResponseWriter, r *http.Request) {
 
 	filePath := mux.Vars(r)["path"]
-	dataStore.StartFileUpload(filePath)
-
-	fileInfo, err := dataStore.StartFileUpload(filePath)
+	fileInfo, err := dataStore.StartFileUpload(filePath, getMedataFromQuery(r))
 	if err == nil {
 		filePartData, err := io.ReadAll(r.Body)
 		if err != nil && err != io.EOF {
