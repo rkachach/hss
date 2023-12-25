@@ -32,7 +32,7 @@ func getMedataFromQuery(r *http.Request) map[string]string {
 	return nil
 }
 
-func PutDirectory(w http.ResponseWriter, r *http.Request) {
+func CreateDirectory(w http.ResponseWriter, r *http.Request) {
 
 	dirPath := mux.Vars(r)["path"]
 	err := dataStore.CreateDirectory(dirPath, getMedataFromQuery(r))
@@ -51,7 +51,7 @@ func DeleteDirectory(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func PutFile(w http.ResponseWriter, r *http.Request) {
+func CreateFile(w http.ResponseWriter, r *http.Request) {
 
 	filePath := mux.Vars(r)["path"]
 	fileInfo, err := dataStore.StartFileUpload(filePath, getMedataFromQuery(r))
