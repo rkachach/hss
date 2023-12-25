@@ -30,9 +30,16 @@ log_cmd "File Download"
 curl -s -X GET http://localhost:9000/$DIRECTORY_NAME/$TEST_FILE\?type\=file -o output_file
 FILE_MD5=$(md5sum output_file | awk '{ print $1 }')
 [ "$FILE_MD5" = "$EXPECTED_FILE_MD5" ] || { echo "Fileect checksum mismatch: exp=$EXPECTED_FILE_MD5 got=$FILE_MD5"; exit 1; }
+rm -f output_file
 
-exit 0
+log_cmd "File Head"
+curl -s --head http://localhost:9000/$DIRECTORY_NAME/$TEST_FILE\?type\=file
+
+log_cmd "Remove file"
+curl -s -X DELETE http://localhost:9000/$DIRECTORY_NAME/$TEST_FILE\?type\=file
+[ ! -e "$DATA_STORE/$DIRECTORY_NAME/$TEST_FILE" ] || { echo "Directory $DATA_STORE/$DIRECTORY_NAME/$TEST_FILE was not deleted correctly."; exit 1; }
 
 log_cmd "Remove directory"
 curl -X DELETE http://localhost:9000/$DIRECTORY_NAME/\?type\=directory
 [ ! -d "$DATA_STORE/$DIRECTORY_NAME/" ] || { echo "Directory $DATA_STORE/$DIRECTORY_NAME/ was not deleted correctly."; exit 1; }
+[ ! -d "$DATA_STORE/$DIRECTORY_NAME/" ] || { echo "Directory $DATA_STORE/$DIRECTORY_NAME/ still exist."; exit 1; }
