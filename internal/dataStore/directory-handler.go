@@ -40,17 +40,17 @@ var(
     lock sync.Mutex
 )
 
-func getDirectoryPath(directoryName string) string {
-	dir := filepath.Dir(directoryName)
+func getDirectoryPath(dirPath string) string {
+	dir := filepath.Dir(dirPath)
 	return fmt.Sprintf("%s/%s", config.AppConfig.StoreConfig.Root, dir)
 }
 
-func getDirectoryInfoPath(directoryName string) string {
-	dir := filepath.Dir(directoryName)
+func getDirectoryInfoPath(dirPath string) string {
+	dir := filepath.Dir(dirPath)
 	return fmt.Sprintf("%s/%s/__info__.json", config.AppConfig.StoreConfig.Root, dir)
 }
 
-func writeDirectoryInfo(dirName string, directoryInfo *DirectoryInfo) {
+func writeDirectoryInfo(dirPath string, directoryInfo *DirectoryInfo) {
 
 	// Marshal struct to JSON
 	jsonData, err := json.MarshalIndent(directoryInfo, "", "  ")
@@ -60,7 +60,7 @@ func writeDirectoryInfo(dirName string, directoryInfo *DirectoryInfo) {
 	}
 
 	// Write directory info file
-	file, err := os.Create(getDirectoryInfoPath(dirName))
+	file, err := os.Create(getDirectoryInfoPath(dirPath))
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -74,39 +74,39 @@ func writeDirectoryInfo(dirName string, directoryInfo *DirectoryInfo) {
 	}
 }
 
-func CreateDirectory(directoryName string, userMetadata map[string]string) error {
+func CreateDirectory(relativeDirPath string, userMetadata map[string]string) error {
 
 	lock.Lock()
 	defer lock.Unlock()
 
 	var directoryInfo DirectoryInfo
-	directoryInfo.Name = directoryName
+	directoryInfo.Name = relativeDirPath
 	directoryInfo.CreatedTime = time.Now()
 	directoryInfo.Metadata = userMetadata
 
 	// Create a directory if it doesn't exist
-	dirPath := getDirectoryPath(directoryName)
+	dirPath := getDirectoryPath(relativeDirPath)
 	exists, err := fsutils.DirectoryExists(dirPath)
 	if exists {
 		config.Logger.Printf("CreateDirectory: %v already exists", config.AppConfig.StoreConfig.Root)
-		return &ObjectError{Op: "already exists", Key: directoryName}
+		return &ObjectError{Op: "already exists", Key: relativeDirPath}
 	} else {
-		config.Logger.Printf("Directory '%v' created successfully", directoryName)
+		config.Logger.Printf("Directory '%v' created successfully", relativeDirPath)
 	}
 
 	err = os.MkdirAll(dirPath, 0755)
 	if err != nil {
-		return &ObjectError{Op: "Error creating directory", Key: directoryName}
+		return &ObjectError{Op: "Error creating directory", Key: relativeDirPath}
 	}
 
-	writeDirectoryInfo(directoryName, &directoryInfo)
+	writeDirectoryInfo(relativeDirPath, &directoryInfo)
 	return nil
 }
 
-func GetyDirectoryInfo(directoryName string) (DirectoryInfo, error) {
+func GetyDirectoryInfo(relativeDirPath string) (DirectoryInfo, error) {
 
 	// Create a directory if it doesn't exist
-	dirPath := getDirectoryPath(directoryName)
+	dirPath := getDirectoryPath(relativeDirPath)
 	exists, err := fsutils.DirectoryExists(dirPath)
 	if !exists {
 		config.Logger.Printf("GetyDirectoryInfo: %v does not exist", dirPath)
@@ -128,17 +128,16 @@ func GetyDirectoryInfo(directoryName string) (DirectoryInfo, error) {
 	return info, nil
 }
 
-func DeleteDirectory(directoryName string) error {
+func DeleteDirectory(relativeDirPath string) error {
 
 	lock.Lock()
 	defer lock.Unlock()
 
-	dirPath := getDirectoryPath(directoryName)
+	dirPath := getDirectoryPath(relativeDirPath)
 	exists, err := fsutils.DirectoryExists(dirPath)
 	if !exists {
 		config.Logger.Printf("getDirectory: Directory not found")
-		//http.NotFound(w, r)
-		return &ObjectError{Op: "Error creating directory", Key: directoryName}
+		return &ObjectError{Op: "Error creating directory", Key: relativeDirPath}
 	}
 
 	// delete the directory from the data store
@@ -146,17 +145,17 @@ func DeleteDirectory(directoryName string) error {
 	if err != nil {
 		fmt.Println("Error deleting directory:", err)
 		//http.Error(w, "Error deleting directory", http.StatusNotFound)
-		return &ObjectError{Op: "Error deleting directory", Key: directoryName}
+		return &ObjectError{Op: "Error deleting directory", Key: relativeDirPath}
 	} else {
-		fmt.Printf("Directory '%v' deleted successfully\n", directoryName)
+		fmt.Printf("Directory '%v' deleted successfully\n", relativeDirPath)
 	}
 
 	// Todo: delete all the directory objects recursively!
 	return nil
 }
 
-func ListDirectory(directoryName string) ([]string, error) {
-	dirPath := getDirectoryPath(directoryName)
+func ListDirectory(relativeDirPath string) ([]string, error) {
+	dirPath := getDirectoryPath(relativeDirPath)
 	fmt.Printf("Listing '%v' directory\n", dirPath)
 	return fsutils.ListDirectoryEntries(dirPath)
 }
