@@ -36,15 +36,15 @@ func PutFile(w http.ResponseWriter, r *http.Request) {
 	filePath := mux.Vars(r)["path"]
 	dataStore.StartFileUpload(filePath)
 
-	FileInfo, err := dataStore.StartFileUpload(filePath)
+	fileInfo, err := dataStore.StartFileUpload(filePath)
 	if err == nil {
-		FilePartData, err := io.ReadAll(r.Body)
+		filePartData, err := io.ReadAll(r.Body)
 		if err != nil && err != io.EOF {
 			http.Error(w, "Error reading request body", http.StatusBadRequest)
 			return
 		}
 
-		_, err = dataStore.WriteFilePart(filePath, FilePartData, 0)
+		fileInfo, err = dataStore.WriteFilePart(filePath, filePartData, 0)
 		if err != nil {
 			http.Error(w, "Error opening file", http.StatusInternalServerError)
 			return
@@ -53,8 +53,8 @@ func PutFile(w http.ResponseWriter, r *http.Request) {
 		FileBytes, err := dataStore.ReadFile(filePath)
 		md5Hash := md5.Sum(FileBytes)
 		md5Checksum := hex.EncodeToString(md5Hash[:])
-		FileInfo.MD5sum = md5Checksum
-		dataStore.UpdateFileInfo(filePath, FileInfo)
+		fileInfo.MD5sum = md5Checksum
+		dataStore.UpdateFileInfo(filePath, fileInfo)
 
 
 	} else {
@@ -62,7 +62,8 @@ func PutFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Length", fmt.Sprintf("%d", FileInfo.Size))
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", 0))
+	w.WriteHeader(http.StatusOK)
 }
 
 func GetFile(w http.ResponseWriter, r *http.Request) {

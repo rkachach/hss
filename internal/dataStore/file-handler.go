@@ -45,9 +45,9 @@ func getFileInfoPath(filePath string) string {
 	return fmt.Sprintf("%s/%s/__%s.json", config.AppConfig.StoreConfig.Root, dir, filename)
 }
 
-func writeFiletInfo(filePath string, FileInfo *FileInfo) error {
+func writeFiletInfo(filePath string, fileInfo *FileInfo) error {
 
-	jsonData, err := json.MarshalIndent(FileInfo, "", "  ")
+	jsonData, err := json.MarshalIndent(fileInfo, "", "  ")
 	if err != nil {
 		fmt.Println("Error when writing Fileinfo:", err)
 		return err
@@ -117,6 +117,7 @@ func WriteFilePart(filePath string, objectPartData []byte, PartNumber int) (File
 
 	fileInfo, err := readFileInfo(filePath)
 	if err != nil {
+		fmt.Printf("Error reading file info: %v\n", err)
 		return FileInfo{}, err
 	}
 
@@ -127,6 +128,7 @@ func WriteFilePart(filePath string, objectPartData []byte, PartNumber int) (File
 	fileInfo.LastModified = time.Now().UTC()
 	err = writeFiletInfo(filePath, &fileInfo)
 	if err != nil {
+		fmt.Printf("Error writing file info: %v\n", err)
 		return FileInfo{}, err
 	}
 
@@ -158,12 +160,12 @@ func ReadFile(filePath string) ([]byte, error) {
 	return data, nil
 }
 
-func UpdateFileInfo(filePath string, objInfo FileInfo) error {
+func UpdateFileInfo(filePath string, fileInfo FileInfo) error {
 
 	lock.Lock()
 	defer lock.Unlock()
 
-	err := writeFiletInfo(filePath, &objInfo)
+	err := writeFiletInfo(filePath, &fileInfo)
 	if err != nil {
 		return err
 	}
