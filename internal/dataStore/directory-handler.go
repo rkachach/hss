@@ -103,29 +103,26 @@ func CreateDirectory(relativeDirPath string, userMetadata map[string]string) err
 	return nil
 }
 
-func GetyDirectoryInfo(relativeDirPath string) (DirectoryInfo, error) {
+func GetDirectoryInfo(relativeDirPath string) (DirectoryInfo, error) {
 
-	// Create a directory if it doesn't exist
-	dirPath := getDirectoryPath(relativeDirPath)
-	exists, err := fsutils.DirectoryExists(dirPath)
-	if !exists {
-		config.Logger.Printf("GetyDirectoryInfo: %v does not exist", dirPath)
+	dirPath := getDirectoryInfoPath(relativeDirPath)
+	file, err := os.Open(dirPath)
+	if err != nil {
+		fmt.Println("Error: directory path doesn't exist", dirPath)
+		return DirectoryInfo{}, err
+	}
+	defer file.Close()
+
+	// Decode JSON from the file
+	var bucketInfo DirectoryInfo
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&bucketInfo)
+	if err != nil {
+		fmt.Println("Error:", err)
 		return DirectoryInfo{}, err
 	}
 
-	// Get directory info using a separate function
-	var info DirectoryInfo
-	info.Path = dirPath
-	size, filesCount, creationTime, err := fsutils.GetDirectoryStats(dirPath)
-	if err != nil {
-		return info, err
-	}
-
-	info.Size = size
-	info.FilesCount = filesCount
-	info.CreatedTime = creationTime
-
-	return info, nil
+	return bucketInfo, nil
 }
 
 func DeleteDirectory(relativeDirPath string) error {

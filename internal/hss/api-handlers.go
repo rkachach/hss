@@ -111,19 +111,17 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 func HeadFile(w http.ResponseWriter, r *http.Request) {
 
 	filePath := mux.Vars(r)["path"]
-	fileBytes, err := dataStore.ReadFile(filePath)
+	fileInfo, err := dataStore.ReadFileInfo(filePath)
 	if err != nil {
 		http.Error(w, "Error reading file ", http.StatusNotFound)
 		return
 	}
 
-	// Calculate MD5 checksum
-	hash := md5.Sum(fileBytes)
-	hashString := hex.EncodeToString(hash[:])
+	w.Header().Set("Content-MD5", fileInfo.MD5sum)
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-MD5", hashString)
-	// Add here any header that could be useful in the future
-
+	for field, value:= range fileInfo.Metadata {
+		w.Header().Set(field, value)
+	}
 }
 
 func DeleteFile(w http.ResponseWriter, r *http.Request) {
@@ -142,7 +140,7 @@ func DeleteFile(w http.ResponseWriter, r *http.Request) {
 
 func HeadDirectory(w http.ResponseWriter, r *http.Request) {
 	dirPath := mux.Vars(r)["path"]
-	dirInfo, err := dataStore.GetyDirectoryInfo(dirPath)
+	dirInfo, err := dataStore.GetDirectoryInfo(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -152,35 +150,32 @@ func HeadDirectory(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Directory-Path", dirInfo.Path)
 	w.Header().Set("Directory-Size", fmt.Sprintf("%v",dirInfo.Size))
 	w.Header().Set("Directory-Files-Count", fmt.Sprintf("%v",dirInfo.FilesCount))
+	for metadataField, metadataFieldValue:= range dirInfo.Metadata {
+		w.Header().Set(metadataField, metadataFieldValue)
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
 func GetDirectory(w http.ResponseWriter, r *http.Request) {
 	dirPath := mux.Vars(r)["path"]
-	dirInfo, err := dataStore.GetyDirectoryInfo(dirPath)
+	dirInfo, err := dataStore.GetDirectoryInfo(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	fmt.Printf("--> %v\n", dirInfo)
 
 	// Convert directory info to a JSON response
 	jsonResponse, err := json.Marshal(dirInfo)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		fmt.Printf("err --> %v\n", err)
 		return
 	}
 
-	fmt.Printf("json --> %v\n", jsonResponse)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	count, err := w.Write(jsonResponse)
+	_, err = w.Write(jsonResponse)
 	if err != nil {
-		fmt.Printf("err --> %v\n", err)
-	} else {
-		fmt.Printf("written --> %v\n", count)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 

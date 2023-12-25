@@ -73,7 +73,7 @@ func writeFiletInfo(filePath string, fileInfo *FileInfo) error {
 	return nil
 }
 
-func readFileInfo(filePath string) (FileInfo, error) {
+func ReadFileInfo(filePath string) (FileInfo, error) {
 
 	file, err := os.Open(getFileInfoPath(filePath))
 	if err != nil {
@@ -97,7 +97,7 @@ func StartFileUpload(filePath string, userMetadata map[string]string) (FileInfo,
 	lock.Lock()
 	defer lock.Unlock()
 
-	_, err := readFileInfo(filePath)
+	_, err := ReadFileInfo(filePath)
 	if err == nil {
 		// File already exists
 		fmt.Printf("File %v already exsits\n", filePath)
@@ -120,7 +120,7 @@ func WriteFilePart(filePath string, objectPartData []byte, PartNumber int) (File
 	lock.Lock()
 	defer lock.Unlock()
 
-	fileInfo, err := readFileInfo(filePath)
+	fileInfo, err := ReadFileInfo(filePath)
 	if err != nil {
 		fmt.Printf("Error reading file info: %v\n", err)
 		return FileInfo{}, err
@@ -183,12 +183,12 @@ func DeleteFile(filePath string) error {
 	lock.Lock()
 	defer lock.Unlock()
 
-	_, err := readFileInfo(filePath)
+	_, err := ReadFileInfo(filePath)
 	if err != nil {
 		return err
 	}
 
-	_, err = readFileInfo(filePath)
+	_, err = ReadFileInfo(filePath)
 	if err != nil {
 		return err
 	}
