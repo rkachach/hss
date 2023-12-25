@@ -31,6 +31,12 @@ func InitAPIRouter() {
 		router.Methods(http.MethodGet).HandlerFunc(hss.Wrapper("GetDirectory", hss.GetDirectory)).Queries("type", "directory")
 		router.Methods(http.MethodHead).HandlerFunc(hss.Wrapper("HeadDirectory", hss.HeadDirectory)).Queries("type", "directory")
 		router.Methods(http.MethodDelete).HandlerFunc(hss.Wrapper("DeleteDirectory", hss.DeleteDirectory)).Queries("type", "directory")
+
+		// File operations
+		router.Methods(http.MethodPut).HandlerFunc(hss.Wrapper("PutFile", hss.PutFile)).Queries("type", "file")
+		router.Methods(http.MethodGet).HandlerFunc(hss.Wrapper("GetFile", hss.GetFile)).Queries("type", "file")
+		router.Methods(http.MethodHead).HandlerFunc(hss.Wrapper("HeadFile", hss.HeadFile)).Queries("type", "file")
+		router.Methods(http.MethodDelete).HandlerFunc(hss.Wrapper("DeleteFile", hss.DeleteFile)).Queries("type", "file")
 	}
 
 	////////////////// Root operations

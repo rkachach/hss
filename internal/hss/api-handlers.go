@@ -5,14 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/rkachach/hss/internal/objectStore"
+	"github.com/rkachach/hss/internal/dataStore"
 	"github.com/rkachach/hss/cmd/config"
+	"io"
+	"crypto/md5"
+	"encoding/hex"
 )
 
 func PutDirectory(w http.ResponseWriter, r *http.Request) {
 
 	dirPath := mux.Vars(r)["path"]
-	err := objectStore.CreateDirectory(dirPath)
+	err := dataStore.CreateDirectory(dirPath)
 	if err != nil {
 		// writeErrorResponse(w, errorCodes.ToAPIErr(ErrDirectoryAlreadyExists), r.URL)
 	} else {
@@ -23,14 +26,60 @@ func PutDirectory(w http.ResponseWriter, r *http.Request) {
 func DeleteDirectory(w http.ResponseWriter, r *http.Request) {
 
 	dirPath := mux.Vars(r)["path"]
-	objectStore.DeleteDirectory(dirPath)
+	dataStore.DeleteDirectory(dirPath)
 	// Write success response.
 	w.WriteHeader(http.StatusOK)
 }
 
+func PutFile(w http.ResponseWriter, r *http.Request) {
+
+	filePath := mux.Vars(r)["path"]
+	dataStore.StartFileUpload(filePath)
+
+	FileInfo, err := dataStore.StartFileUpload(filePath)
+	if err == nil {
+		FilePartData, err := io.ReadAll(r.Body)
+		if err != nil && err != io.EOF {
+			http.Error(w, "Error reading request body", http.StatusBadRequest)
+			return
+		}
+
+		_, err = dataStore.WriteFilePart(filePath, FilePartData, 0)
+		if err != nil {
+			http.Error(w, "Error opening file", http.StatusInternalServerError)
+			return
+		}
+
+		FileBytes, err := dataStore.ReadFile(filePath)
+		md5Hash := md5.Sum(FileBytes)
+		md5Checksum := hex.EncodeToString(md5Hash[:])
+		FileInfo.MD5sum = md5Checksum
+		dataStore.UpdateFileInfo(filePath, FileInfo)
+
+
+	} else {
+		http.Error(w, "Error when creating a new upload", http.StatusNotFound)
+	}
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", FileInfo.Size))
+}
+
+func GetFile(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func HeadFile(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func DeleteFile(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func HeadDirectory(w http.ResponseWriter, r *http.Request) {
 	dirPath := mux.Vars(r)["path"]
-	dirInfo, err := objectStore.GetyDirectoryInfo(dirPath)
+	dirInfo, err := dataStore.GetyDirectoryInfo(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -45,7 +94,7 @@ func HeadDirectory(w http.ResponseWriter, r *http.Request) {
 
 func GetDirectory(w http.ResponseWriter, r *http.Request) {
 	dirPath := mux.Vars(r)["path"]
-	dirInfo, err := objectStore.GetyDirectoryInfo(dirPath)
+	dirInfo, err := dataStore.GetyDirectoryInfo(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -74,7 +123,7 @@ func GetDirectory(w http.ResponseWriter, r *http.Request) {
 
 func ListDirectory(w http.ResponseWriter, r *http.Request) {
 	dirPath := mux.Vars(r)["path"]
-	entries, err := objectStore.ListDirectory(dirPath)
+	entries, err := dataStore.ListDirectory(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
