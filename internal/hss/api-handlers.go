@@ -1,6 +1,7 @@
 package hss
 
 import (
+	"strings"
 	"net/http"
 	"encoding/json"
 	"fmt"
@@ -15,7 +16,19 @@ import (
 func PutDirectory(w http.ResponseWriter, r *http.Request) {
 
 	dirPath := mux.Vars(r)["path"]
-	err := dataStore.CreateDirectory(dirPath)
+	metadataFields := r.Header.Get("Metadata-Fields")
+
+	// Split the header value by comma to get individual metadata field names
+	userMetadata := make(map[string]string)
+	metadataFieldList := strings.Split(metadataFields, ",")
+	for _, field := range metadataFieldList {
+		// Access the value of each metadata field from request headers
+		metadataValue := r.Header.Get(strings.TrimSpace(field))
+		userMetadata[field] = metadataValue
+		fmt.Printf("Metadata field '%s': %s\n", field, metadataValue) // Process metadata values
+	}
+
+	err := dataStore.CreateDirectory(dirPath, userMetadata)
 	if err != nil {
 		// writeErrorResponse(w, errorCodes.ToAPIErr(ErrDirectoryAlreadyExists), r.URL)
 	} else {

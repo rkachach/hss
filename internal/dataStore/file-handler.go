@@ -53,9 +53,10 @@ func writeFiletInfo(filePath string, fileInfo *FileInfo) error {
 		return err
 	}
 
-	file, err := os.Create(getFileInfoPath(filePath))
+	infoFilePath := getFileInfoPath(filePath)
+	file, err := os.Create(infoFilePath)
 	if err != nil {
-		fmt.Println("os.Create Error:", err)
+		fmt.Printf("os.Create Error: %v (path: %v)\n", err, infoFilePath)
 		return err
 	}
 	defer file.Close()

@@ -30,6 +30,9 @@ type DirectoryInfo struct {
 	// Date and time when the directory was created/deleted
 	CreatedTime time.Time `json:"created"`
 	DeletedTime time.Time `json:"deleted,omitempty"`
+
+	// Metadata for the directory
+	Metadata map[string]string `json:"metadata,omitempty"`
 }
 
 var(
@@ -64,7 +67,7 @@ func writeDirectoryInfo(dirName string, directoryInfo *DirectoryInfo) {
 	}
 }
 
-func CreateDirectory(directoryName string) error {
+func CreateDirectory(directoryName string, userMetadata map[string]string) error {
 
 	lock.Lock()
 	defer lock.Unlock()
@@ -72,6 +75,7 @@ func CreateDirectory(directoryName string) error {
 	var directoryInfo DirectoryInfo
 	directoryInfo.Name = directoryName
 	directoryInfo.CreatedTime = time.Now()
+	directoryInfo.Metadata = userMetadata
 
 	// Create a directory if it doesn't exist
 	dirPath := getDirectoryPath(config.AppConfig.StoreConfig.Root, directoryName)
