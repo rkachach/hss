@@ -40,8 +40,7 @@ func InitAPIRouter() {
 	}
 
 	////////////////// Root operations
-	//apiRouter.Methods(http.MethodGet).HandlerFunc(hss.Wrapper("ListDirectorys", hss.ListDirectorys))
-
+	apiRouter.Methods(http.MethodGet).HandlerFunc(hss.Wrapper("ListDirectory", hss.ListDirectory)).Queries("type", "directory", "operation", "list")
 
 	/////////////////////////////////////////////////
 	////////////////// Management console operations

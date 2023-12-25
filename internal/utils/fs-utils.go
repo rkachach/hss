@@ -10,24 +10,27 @@ import (
 )
 
 func ListDirectoryEntries(dirPath string) ([]string, error) {
-	var files []string
+	var entries []string
 
-	err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() {
-			// Add file name to the list
-			files = append(files, info.Name())
-		}
-		return nil
-	})
+	// Open the directory
+	dir, err := os.Open(dirPath)
+	if err != nil {
+		return nil, err
+	}
+	defer dir.Close()
 
+	// Read the directory contents
+	fileInfos, err := dir.Readdir(-1)
 	if err != nil {
 		return nil, err
 	}
 
-	return files, nil
+	// Filter directories
+	for _, fileInfo := range fileInfos {
+		entries = append(entries, fileInfo.Name())
+	}
+
+	return entries, nil
 }
 
 func ListDirectories(dirPath string) ([]string, error) {

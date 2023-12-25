@@ -170,7 +170,7 @@ func ListDirectory(w http.ResponseWriter, r *http.Request) {
 	dirPath := mux.Vars(r)["path"]
 	entries, err := dataStore.ListDirectory(dirPath)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
