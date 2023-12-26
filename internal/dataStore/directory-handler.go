@@ -2,7 +2,6 @@ package dataStore
 
 import (
 	"sync"
-	"path/filepath"
 	"encoding/json"
 	"os"
 	"fmt"
@@ -41,13 +40,11 @@ var(
 )
 
 func getDirectoryPath(dirPath string) string {
-	dir := filepath.Dir(dirPath)
-	return fmt.Sprintf("%s/%s", config.AppConfig.StoreConfig.Root, dir)
+	return fmt.Sprintf("%s/%s", config.AppConfig.StoreConfig.Root, dirPath)
 }
 
 func getDirectoryInfoPath(dirPath string) string {
-	dir := filepath.Dir(dirPath)
-	return fmt.Sprintf("%s/%s/__info__.json", config.AppConfig.StoreConfig.Root, dir)
+	return fmt.Sprintf("%s/%s/__info__.json", config.AppConfig.StoreConfig.Root, dirPath)
 }
 
 func writeDirectoryInfo(relativeDirPath string, directoryInfo *DirectoryInfo) {
@@ -88,10 +85,10 @@ func CreateDirectory(relativeDirPath string, userMetadata map[string]string) err
 	dirPath := getDirectoryPath(relativeDirPath)
 	exists, err := fsutils.DirectoryExists(dirPath)
 	if exists {
-		config.Logger.Printf("CreateDirectory: %v already exists", config.AppConfig.StoreConfig.Root)
+		config.Logger.Printf("CreateDirectory: %v already exists", dirPath)
 		return &DirectoryError{Op: "already exists", Key: relativeDirPath}
 	} else {
-		config.Logger.Printf("Directory '%v' created successfully", relativeDirPath)
+		config.Logger.Printf("Directory '%v' created successfully", dirPath)
 	}
 
 	err = os.MkdirAll(dirPath, 0755)
