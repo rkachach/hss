@@ -8,6 +8,7 @@ import (
 	"github.com/rkachach/hss/internal/hss"
 	"github.com/rkachach/hss/cmd/config"
 	"github.com/rkachach/hss/internal/console"
+	"github.com/gorilla/handlers"
 )
 
 const SlashSeparator string = "/"
@@ -42,6 +43,13 @@ func InitAPIRouter() {
 	////////////////// Root operations
 	apiRouter.Methods(http.MethodGet).HandlerFunc(hss.Wrapper("ListDirectory", hss.ListDirectory)).Queries("type", "directory", "operation", "list")
 
+	// CORS middleware
+	cors := handlers.CORS(
+		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
+		handlers.AllowedOrigins([]string{"*"}), // Replace "*" with your allowed origins
+	)
+
 	/////////////////////////////////////////////////
 	////////////////// Management console operations
 	/////////////////////////////////////////////////
@@ -56,5 +64,5 @@ func InitAPIRouter() {
 
 	// listen on the main server port
 	addr := fmt.Sprintf(":%v", config.AppConfig.ServerPort)
-	log.Fatal(http.ListenAndServe(addr, router))
+	log.Fatal(http.ListenAndServe(addr, cors(router)))
 }
