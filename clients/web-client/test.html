@@ -26,6 +26,10 @@
         button {
             margin-bottom: 10px;
         }
+
+        #breadcrumbs {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -40,6 +44,7 @@
         <label for="serverUrl">Server URL:</label>
         <input type="text" id="serverUrl" placeholder="Enter server URL">
         <button onclick="setServerUrl()">Set Server URL</button>
+        <div id="breadcrumbs"></div>
         <hr>
         <h2>Directories</h2>
         <div id="directories"></div>

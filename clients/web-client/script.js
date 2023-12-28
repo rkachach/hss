@@ -1,4 +1,4 @@
-let serverUrl = '';
+let serverUrl = 'http://localhost:9000';
 let currentDirectory = '';
 
 function setServerUrl() {
@@ -15,30 +15,66 @@ function makeRequest(method, endpoint, queryParams = {}) {
         method: method,
     })
     .then(response => response.json())
-    .then(data => {
-        console.log(data);
-        displayDirectories(data);
-    })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error:', error);
+        return null;
+    });
 }
 
 function displayDirectories(directories) {
     const directoriesDiv = document.getElementById('directories');
     directoriesDiv.innerHTML = '';
 
-    directories.forEach(directory => {
-        const button = document.createElement('button');
-        button.textContent = `📁 ${directory}`;
-        button.onclick = () => {
-            currentDirectory = `${currentDirectory}/${directory}`;
-            listDirectories();
-        };
-        directoriesDiv.appendChild(button);
-    });
+    if (directories !== null) {
+        directories.forEach(directory => {
+            const button = document.createElement('button');
+            button.textContent = `📁 ${directory}`;
+            button.onclick = () => {
+                currentDirectory = `${currentDirectory}/${directory}`;
+                listDirectories();
+            };
+            directoriesDiv.appendChild(button);
+        });
+    }
 }
 
-function listDirectories() {
-    makeRequest('GET', `/${currentDirectory}`, { type: 'directory', operation: 'list'});
+function listDirectories(path) {
+    console.log('-> Listing directories ' + path)
+    if (path !== undefined)
+	currentDirectory = path;
+    console.log('Listing directories ' + currentDirectory)
+    makeRequest('GET', `/${currentDirectory}`, { type: 'directory', operation: 'list'})
+        .then(data => {
+            displayDirectories(data);
+            displayBreadcrumbs();
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function displayBreadcrumbs() {
+    const breadcrumbsDiv = document.getElementById('breadcrumbs');
+
+    if (breadcrumbsDiv) {
+        breadcrumbsDiv.innerHTML = '';
+
+        if (currentDirectory) {
+            const directories = currentDirectory.split('/');
+            let path = '';
+
+            directories.forEach((directory, index) => {
+                if (directory) {
+                    const button = document.createElement('button');
+                    button.textContent = directory;
+                    button.onclick = () => {
+                        const newPath = directories.slice(0, index + 1).join('/');
+                        currentDirectory = newPath;
+                        listDirectories();
+                    };
+                    breadcrumbsDiv.appendChild(button);
+                }
+            });
+        }
+    }
 }
 
 function getFiles() {
@@ -111,3 +147,6 @@ function goToParent() {
         }
     }
 }
+
+// Initial call to set up the UI
+listDirectories();
