@@ -57,25 +57,34 @@ function displayBreadcrumbs() {
     if (breadcrumbsDiv) {
         breadcrumbsDiv.innerHTML = '';
 
-        if (currentDirectory) {
-            const directories = currentDirectory.split('/');
-            let path = '';
+        const directories = currentDirectory.split('/');
+        let path = '';
 
-            directories.forEach((directory, index) => {
-                if (directory) {
-                    const button = document.createElement('button');
-                    button.textContent = directory;
-                    button.onclick = () => {
-                        const newPath = directories.slice(0, index + 1).join('/');
-                        currentDirectory = newPath;
-                        listDirectories();
-                    };
-                    breadcrumbsDiv.appendChild(button);
-                }
-            });
+        const rootButton = document.createElement('button');
+        rootButton.textContent = '/';
+        rootButton.onclick = () => {
+            currentDirectory = '';
+            listDirectories();
+        };
+        breadcrumbsDiv.appendChild(rootButton);
+
+        for (let i = 0; i < directories.length; i++) {
+            const directory = directories[i];
+            if (directory) {
+                path += `/${directory}`;
+                const button = document.createElement('button');
+                button.textContent = directory;
+                const newPath = path;
+                button.onclick = () => {
+                    currentDirectory = newPath;
+                    listDirectories();
+                };
+                breadcrumbsDiv.appendChild(button);
+            }
         }
     }
 }
+
 
 function getFiles() {
     makeRequest('GET', '/GetFile', { type: 'file' });
