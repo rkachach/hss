@@ -134,7 +134,7 @@ function uploadFile(file) {
     const formData = new FormData();
     formData.append('file', file);
 
-    return fetch(serverUrl + '/CreateFile', {
+    return fetch(serverUrl + '/CreateFile?type=file', {
         method: 'POST',
         body: formData,
     })
