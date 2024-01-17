@@ -13,6 +13,11 @@ import (
 	"encoding/hex"
 )
 
+// TODO find where to get information about dataStores, there could be multiple Data Stores like
+// a metadata store, a data store...
+// Right now this is a hacky single store we have.
+var store dataStore.DataStore = dataStore.OsFileSystem{}
+
 func getMedataFromQuery(r *http.Request) map[string]string {
 	// Split the header value by comma to get individual metadata field names
 	metadataFields := r.Header.Get("Metadata-Fields")
@@ -35,7 +40,7 @@ func getMedataFromQuery(r *http.Request) map[string]string {
 func CreateDirectory(w http.ResponseWriter, r *http.Request) {
 
 	dirPath := mux.Vars(r)["path"]
-	err := dataStore.CreateDirectory(dirPath, getMedataFromQuery(r))
+	err := store.CreateDirectory(dirPath, getMedataFromQuery(r))
 	if err != nil {
 		// writeErrorResponse(w, errorCodes.ToAPIErr(ErrDirectoryAlreadyExists), r.URL)
 	} else {
@@ -46,7 +51,7 @@ func CreateDirectory(w http.ResponseWriter, r *http.Request) {
 func DeleteDirectory(w http.ResponseWriter, r *http.Request) {
 
 	dirPath := mux.Vars(r)["path"]
-	dataStore.DeleteDirectory(dirPath)
+	store.DeleteDirectory(dirPath)
 	// Write success response.
 	w.WriteHeader(http.StatusOK)
 }
@@ -54,7 +59,13 @@ func DeleteDirectory(w http.ResponseWriter, r *http.Request) {
 func CreateFile(w http.ResponseWriter, r *http.Request) {
 
 	filePath := mux.Vars(r)["path"]
-	fileInfo, err := dataStore.StartFileUpload(filePath, getMedataFromQuery(r))
+  println("path", filePath)
+  if filePath == "" {
+			http.Error(w, "Missing file path", http.StatusBadRequest)
+      return
+  }
+
+	fileInfo, err := store.StartFileUpload(filePath, getMedataFromQuery(r))
 	if err == nil {
 		filePartData, err := io.ReadAll(r.Body)
 		if err != nil && err != io.EOF {
@@ -62,17 +73,17 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fileInfo, err = dataStore.WriteFilePart(filePath, filePartData, 0)
+		fileInfo, err = store.WriteFilePart(filePath, filePartData, 0)
 		if err != nil {
 			http.Error(w, "Error opening file", http.StatusInternalServerError)
 			return
 		}
 
-		FileBytes, err := dataStore.ReadFile(filePath)
+		FileBytes, err := store.ReadFile(filePath)
 		md5Hash := md5.Sum(FileBytes)
 		md5Checksum := hex.EncodeToString(md5Hash[:])
 		fileInfo.MD5sum = md5Checksum
-		dataStore.UpdateFileInfo(filePath, fileInfo)
+		store.UpdateFileInfo(filePath, fileInfo)
 
 
 	} else {
@@ -87,7 +98,7 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 func GetFile(w http.ResponseWriter, r *http.Request) {
 
 	filePath := mux.Vars(r)["path"]
-	fileBytes, err := dataStore.ReadFile(filePath)
+	fileBytes, err := store.ReadFile(filePath)
 	if err != nil {
 		http.Error(w, "Error reading file ", http.StatusNotFound)
 		return
@@ -111,7 +122,7 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 func HeadFile(w http.ResponseWriter, r *http.Request) {
 
 	filePath := mux.Vars(r)["path"]
-	fileInfo, err := dataStore.ReadFileInfo(filePath)
+	fileInfo, err := store.ReadFileInfo(filePath)
 	if err != nil {
 		http.Error(w, "Error reading file ", http.StatusNotFound)
 		return
@@ -128,7 +139,7 @@ func DeleteFile(w http.ResponseWriter, r *http.Request) {
 
 	filePath := mux.Vars(r)["path"]
 
-	err := dataStore.DeleteFile(filePath)
+	err := store.DeleteFile(filePath)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error deleting object: %v", filePath), http.StatusNotFound)
 		return
@@ -140,7 +151,7 @@ func DeleteFile(w http.ResponseWriter, r *http.Request) {
 
 func HeadDirectory(w http.ResponseWriter, r *http.Request) {
 	dirPath := mux.Vars(r)["path"]
-	dirInfo, err := dataStore.GetDirectoryInfo(dirPath)
+	dirInfo, err := store.GetDirectoryInfo(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -158,7 +169,7 @@ func HeadDirectory(w http.ResponseWriter, r *http.Request) {
 
 func GetDirectory(w http.ResponseWriter, r *http.Request) {
 	dirPath := mux.Vars(r)["path"]
-	dirInfo, err := dataStore.GetDirectoryInfo(dirPath)
+	dirInfo, err := store.GetDirectoryInfo(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -181,7 +192,7 @@ func GetDirectory(w http.ResponseWriter, r *http.Request) {
 
 func ListDirectory(w http.ResponseWriter, r *http.Request) {
 	dirPath := mux.Vars(r)["path"]
-	entries, err := dataStore.ListDirectory(dirPath)
+	entries, err := store.ListDirectory(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

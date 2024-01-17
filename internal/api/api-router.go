@@ -26,6 +26,9 @@ func InitAPIRouter() {
 		////////////////// Directory operations
 		////////////////////////////////////////
 
+
+
+
 		// Directory operations
 		router.Methods(http.MethodPost).HandlerFunc(hss.Wrapper("CreateDirectory", hss.CreateDirectory)).Queries("type", "directory")
 		router.Methods(http.MethodGet).HandlerFunc(hss.Wrapper("ListDirectory", hss.ListDirectory)).Queries("type", "directory", "operation", "list")
