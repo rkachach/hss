@@ -371,9 +371,18 @@ func (store OsFileSystem) DeleteDirectory(relativeDirPath string) error {
 	return nil
 }
 
-// FIXME: We need to list FilesCreated and not include metadata files 
 func (store OsFileSystem) ListDirectory(relativeDirPath string) ([]string, error) {
 	dirPath := getDirectoryPath(relativeDirPath)
 	fmt.Printf("Listing '%v' directory\n", dirPath)
-	return fsutils.ListDirectoryEntries(dirPath)
+	var dirEntries []string
+	elements, err := fsutils.ListDirectoryEntries(dirPath)
+	if err == nil {
+		for _, entry := range elements {
+			if ! store.IsMetadataFile(entry){
+				dirEntries = append(dirEntries, entry)
+			}
+		}
+	}
+
+	return dirEntries, err
 }
