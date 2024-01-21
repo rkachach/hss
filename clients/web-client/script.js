@@ -97,7 +97,7 @@ function listStarred() {
 function newDirectory() {
     const directoryName = prompt('Enter new directory name:');
     if (directoryName) {
-        makeRequest('POST', '/' + directoryName, { type: 'directory'});
+        makeRequest('POST', '/' + currentDirectory + '/' + directoryName, { type: 'directory'});
     }
     listDirectories()
 }
