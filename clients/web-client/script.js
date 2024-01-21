@@ -8,7 +8,18 @@ function makeRequest(method, endpoint, queryParams = {}) {
     return fetch(url, {
         method: method,
     })
-	.then(response => response.json())
+	.then(response => {
+            if (!response.ok) {
+		console.error('Error:', response.statusText);
+		return null;
+            }
+            // Check if the response has content before attempting to parse as JSON
+            const contentLength = response.headers.get('Content-Length');
+            if (contentLength === '0' || response.status === 204) {
+		return null;
+            }
+            return response.json();
+	})
 	.catch(error => {
             console.error('Error:', error);
             return null;
@@ -53,9 +64,9 @@ function displayFiles(files) {
 }
 
 function listDirectories(path) {
-    if (path !== undefined)
+    if (path != undefined)
 	currentDirectory = path;
-    console.log('Listing directories ' + currentDirectory)
+    console.log('Listing directory: ' + currentDirectory)
     makeRequest('GET', `/${currentDirectory}`, { type: 'directory', operation: 'list'})
         .then(data => {
 	    var directories
@@ -123,8 +134,8 @@ function newDirectory() {
     const directoryName = prompt('Enter new directory name:');
     if (directoryName) {
         makeRequest('POST', '/' + currentDirectory + '/' + directoryName, { type: 'directory'});
+	listDirectories()
     }
-    listDirectories()
 }
 
 function newFile() {
