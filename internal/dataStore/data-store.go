@@ -16,7 +16,8 @@ import (
 )
 
 type DataStore interface {
-  IsMetadataFile(filename string) bool 
+  Init(dataStore string) error
+  IsMetadataFile(filename string) bool
   StartFileUpload(filePath string, userMetadata map[string]string) (FileInfo, error)
   ReadFileInfo(filePath string) (FileInfo, error)
   WriteFilePart(filePath string, objectPartData []byte, PartNumber int) (FileInfo, error)
@@ -59,6 +60,14 @@ type FileInfo struct {
 
 	// Metadata for the directory
 	Metadata map[string]string `json:"metadata,omitempty"`
+}
+
+func (store OsFileSystem) Init(dataStore string) error {
+	err := os.MkdirAll(dataStore, 0755)
+	if err != nil {
+		return &DirectoryError{Op: "Error creating directory", Key: dataStore}
+	}
+	return err
 }
 
 func (store OsFileSystem) IsMetadataFile(filename string) bool {
@@ -326,7 +335,7 @@ func (store OsFileSystem) CreateDirectory(relativeDirPath string, userMetadata m
 	if err != nil {
 		return &DirectoryError{Op: "Error creating directory", Key: relativeDirPath}
 	}
-  config.Logger.Printf("Directory '%v' created successfully", dirPath)
+	config.Logger.Printf("Directory '%v' created successfully", dirPath)
 
 	writeDirectoryInfo(relativeDirPath, &directoryInfo)
 	return nil
