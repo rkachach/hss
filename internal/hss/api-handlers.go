@@ -120,6 +120,7 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 func GetFile(w http.ResponseWriter, r *http.Request) {
 
 	filePath := mux.Vars(r)["path"]
+	filePath, err := url.QueryUnescape(filePath)
 	fileBytes, err := store.ReadFile(filePath)
 	if err != nil {
 		http.Error(w, "Error reading file ", http.StatusNotFound)
