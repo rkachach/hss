@@ -3,6 +3,7 @@ package hss
 import (
 	"strings"
 	"net/http"
+	"net/url"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
@@ -59,12 +60,13 @@ func DeleteDirectory(w http.ResponseWriter, r *http.Request) {
 func CreateFile(w http.ResponseWriter, r *http.Request) {
 
 	filePath := mux.Vars(r)["path"]
-  println("path", filePath)
-  if filePath == "" {
-			http.Error(w, "Missing file path", http.StatusBadRequest)
-      return
-  }
+	println("path", filePath)
+	if filePath == "" {
+		http.Error(w, "Missing file path", http.StatusBadRequest)
+		return
+	}
 
+	filePath, err := url.QueryUnescape(filePath)
 	fileInfo, err := store.StartFileUpload(filePath, getMedataFromQuery(r))
 	if err == nil {
 		filePartData, err := io.ReadAll(r.Body)
