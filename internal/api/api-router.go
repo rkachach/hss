@@ -8,7 +8,6 @@ import (
 	"github.com/rkachach/hss/internal/hss"
 	"github.com/rkachach/hss/cmd/config"
 	"github.com/rkachach/hss/internal/console"
-	"github.com/gorilla/handlers"
 )
 
 const SlashSeparator string = "/"
@@ -25,9 +24,6 @@ func InitAPIRouter() {
 		////////////////////////////////////////
 		////////////////// Directory operations
 		////////////////////////////////////////
-
-
-
 
 		// Directory operations
 		router.Methods(http.MethodPost).HandlerFunc(hss.Wrapper("CreateDirectory", hss.CreateDirectory)).Queries("type", "directory")
@@ -46,12 +42,20 @@ func InitAPIRouter() {
 	////////////////// Root operations
 	apiRouter.Methods(http.MethodGet).HandlerFunc(hss.Wrapper("ListDirectory", hss.ListDirectory)).Queries("type", "directory", "operation", "list")
 
-	// CORS middleware
-	cors := handlers.CORS(
-		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
-		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}),
-		handlers.AllowedOrigins([]string{"*"}), // Replace "*" with your allowed origins
-	)
+	corsMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "*") // Set the allowed origin, or replace * with your specific domain
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, Content-Disposition")
+
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 
 	/////////////////////////////////////////////////
 	////////////////// Management console operations
@@ -67,5 +71,5 @@ func InitAPIRouter() {
 
 	// listen on the main server port
 	addr := fmt.Sprintf(":%v", config.AppConfig.ServerPort)
-	log.Fatal(http.ListenAndServe(addr, cors(router)))
+	log.Fatal(http.ListenAndServe(addr, corsMiddleware(router)))
 }
