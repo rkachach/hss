@@ -33,6 +33,7 @@ function displayDirectories(directories) {
     if (directories != null) {
         directories.forEach(directory => {
             const button = document.createElement('button');
+	    button.className = 'folder-button';
             button.textContent = `${directory.name}`;
             button.onclick = () => {
                 currentDirectory = `${currentDirectory}/${directory.name}`;
@@ -53,6 +54,7 @@ function displayFiles(files) {
     if (files != null) {
         files.forEach(file => {
             const button = document.createElement('button');
+	    button.className = 'file-button';
             button.textContent = `${file.name}`;
             filesDiv.appendChild(button);
 
@@ -184,6 +186,7 @@ function displayBreadcrumbs() {
         let path = '';
 
         const rootButton = document.createElement('button');
+	rootButton.className = 'breadcrumb-button'
         rootButton.textContent = 'Drive';
         rootButton.onclick = () => {
             currentDirectory = '';
@@ -196,6 +199,7 @@ function displayBreadcrumbs() {
             if (directory) {
                 path += `/${directory}`;
                 const button = document.createElement('button');
+		button.className = 'breadcrumb-button'
                 button.textContent = directory;
                 const newPath = path;
                 button.onclick = () => {

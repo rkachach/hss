@@ -29,6 +29,36 @@ button {
     border-radius: 5px;
 }
 
+.folder-button {
+    margin-bottom: 10px;
+    background-color: #5DADE2; /* Use a gray color */
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.file-button {
+    margin-bottom: 10px;
+    background-color: #34495E; /* Use a gray color */
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.breadcrumb-button {
+    margin-bottom: 10px;
+    background-color: #F4F6F6; /* Use a gray color */
+    color: black;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
 button:hover {
     background-color: #696969; /* Darker shade on hover */
 }
