@@ -26,7 +26,7 @@ type DataStore interface {
   CreateDirectory(relativeDirPath string, userMetadata map[string]string) error
   GetDirectoryInfo(relativeDirPath string) (DirectoryInfo, error)
   DeleteDirectory(relativeDirPath string) error
-  ListDirectory(relativeDirPath string) ([]string, error)
+  ListDirectory(relativeDirPath string) ([]ElementExtendedInfo, error)
 }
 
 type OsFileSystem struct {
@@ -39,6 +39,14 @@ type FileError struct {
 }
 
 func (e *FileError) Error() string { return e.Op + " " + e.Key + ": " + e.Err.Error() }
+
+type ElementExtendedInfo struct {
+	Name         string    `json:"name"`
+	Type          string   `json:"type"`
+	Key          string    `json:"key"`
+	LastModified time.Time `json:"lastModified"`
+	Size         int64     `json:"size"`
+}
 
 type FileInfo struct {
 	Name         string    `json:"name"`
@@ -371,15 +379,22 @@ func (store OsFileSystem) DeleteDirectory(relativeDirPath string) error {
 	return nil
 }
 
-func (store OsFileSystem) ListDirectory(relativeDirPath string) ([]string, error) {
+func (store OsFileSystem) ListDirectory(relativeDirPath string) ([]ElementExtendedInfo, error) {
 	dirPath := getDirectoryPath(relativeDirPath)
 	fmt.Printf("Listing '%v' directory\n", dirPath)
-	var dirEntries []string
-	elements, err := fsutils.ListDirectoryEntries(dirPath)
+	var dirEntries []ElementExtendedInfo
+	elements, err := fsutils.ListDirectoryWithDetails(dirPath)
 	if err == nil {
 		for _, entry := range elements {
-			if ! store.IsMetadataFile(entry){
-				dirEntries = append(dirEntries, entry)
+			if ! store.IsMetadataFile(entry.Name){
+				elementType := ""
+				if entry.IsDirectory {
+					elementType = "directory"
+				} else {
+					elementType = "file"
+				}
+				dirElement := ElementExtendedInfo{Name:entry.Name, Type: elementType}
+				dirEntries = append(dirEntries, dirElement)
 			}
 		}
 	}

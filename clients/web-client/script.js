@@ -19,15 +19,35 @@ function displayDirectories(directories) {
     const directoriesDiv = document.getElementById('directories');
     directoriesDiv.innerHTML = '';
 
-    if (directories !== null) {
+    if (directories != null) {
         directories.forEach(directory => {
             const button = document.createElement('button');
-            button.textContent = `📁 ${directory}`;
+            button.textContent = `${directory.name}`;
             button.onclick = () => {
-                currentDirectory = `${currentDirectory}/${directory}`;
+                currentDirectory = `${currentDirectory}/${directory.name}`;
                 listDirectories();
             };
             directoriesDiv.appendChild(button);
+
+            // Add space after each button
+            const space = document.createTextNode(' ');
+            directoriesDiv.appendChild(space);
+        });
+    }
+}
+
+function displayFiles(files) {
+    const filesDiv = document.getElementById('files');
+    filesDiv.innerHTML = '';
+    if (files != null) {
+        files.forEach(file => {
+            const button = document.createElement('button');
+            button.textContent = `${file.name}`;
+            filesDiv.appendChild(button);
+
+            // Add space after each button
+            const space = document.createTextNode(' ');
+            filesDiv.appendChild(space);
         });
     }
 }
@@ -39,8 +59,15 @@ function listDirectories(path) {
     console.log('Listing directories ' + currentDirectory)
     makeRequest('GET', `/${currentDirectory}`, { type: 'directory', operation: 'list'})
         .then(data => {
-            displayDirectories(data);
-            displayBreadcrumbs();
+	    var directories
+	    var files
+	    if ( data != null) {
+		directories = data.filter(item => item.type === "directory");
+		files = data.filter(item => item.type === "file");
+	    }
+	    displayDirectories(directories);
+	    displayFiles(files);
+	    displayBreadcrumbs();
         })
         .catch(error => console.error('Error:', error));
 }
@@ -79,10 +106,6 @@ function displayBreadcrumbs() {
     }
 }
 
-
-function getFiles() {
-    makeRequest('GET', '/GetFile', { type: 'file' });
-}
 
 function listRecent() {
     // Logic for listing recent files or directories

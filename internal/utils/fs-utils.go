@@ -9,6 +9,11 @@ import (
 	"fmt"
 )
 
+type EntryInfo struct {
+	Name       string
+	IsDirectory bool
+}
+
 func ListDirectoryEntries(dirPath string) ([]string, error) {
 	var entries []string
 
@@ -28,6 +33,34 @@ func ListDirectoryEntries(dirPath string) ([]string, error) {
 	// Filter directories
 	for _, fileInfo := range fileInfos {
 		entries = append(entries, fileInfo.Name())
+	}
+
+	return entries, nil
+}
+
+func ListDirectoryWithDetails(dirPath string) ([]EntryInfo, error) {
+	var entries []EntryInfo
+
+	// Open the directory
+	dir, err := os.Open(dirPath)
+	if err != nil {
+		return nil, err
+	}
+	defer dir.Close()
+
+	// Read the directory contents
+	fileInfos, err := dir.Readdir(-1)
+	if err != nil {
+		return nil, err
+	}
+
+	// Collect entry information
+	for _, fileInfo := range fileInfos {
+		entryInfo := EntryInfo{
+			Name:       fileInfo.Name(),
+			IsDirectory: fileInfo.IsDir(),
+		}
+		entries = append(entries, entryInfo)
 	}
 
 	return entries, nil
