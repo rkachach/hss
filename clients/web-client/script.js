@@ -8,11 +8,11 @@ function makeRequest(method, endpoint, queryParams = {}) {
     return fetch(url, {
         method: method,
     })
-    .then(response => response.json())
-    .catch(error => {
-        console.error('Error:', error);
-        return null;
-    });
+	.then(response => response.json())
+	.catch(error => {
+            console.error('Error:', error);
+            return null;
+	});
 }
 
 function displayDirectories(directories) {
@@ -53,7 +53,6 @@ function displayFiles(files) {
 }
 
 function listDirectories(path) {
-    console.log('-> Listing directories ' + path)
     if (path !== undefined)
 	currentDirectory = path;
     console.log('Listing directories ' + currentDirectory)
@@ -100,6 +99,9 @@ function displayBreadcrumbs() {
                     currentDirectory = newPath;
                     listDirectories();
                 };
+
+		const space = document.createTextNode(' > ');
+		breadcrumbsDiv.appendChild(space);
                 breadcrumbsDiv.appendChild(button);
             }
         }
@@ -163,20 +165,20 @@ function uploadFile(file, filename) {
 	    'Content-Disposition': `attachment; filename="${filename}"`
         }
     })
-    .then(response => {
-        if (response.ok) {
-            // Handle successful response
-            console.log('File uploaded successfully!');
-	    listDirectories()
-        } else {
-            // Handle error response
-            console.error('Failed to upload file.');
-        }
-    })
-    .catch(error => {
-        // Handle fetch error
-        console.error('Error:', error);
-    });
+	.then(response => {
+            if (response.ok) {
+		// Handle successful response
+		console.log('File uploaded successfully!');
+		listDirectories()
+            } else {
+		// Handle error response
+		console.error('Failed to upload file.');
+            }
+	})
+	.catch(error => {
+            // Handle fetch error
+            console.error('Error:', error);
+	});
 }
 
 function goToParent() {
