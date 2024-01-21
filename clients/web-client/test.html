@@ -35,15 +35,13 @@
 <body>
     <div id="sidebar">
         <h2>Options</h2>
-        <button onclick="newOption()">New</button>
+        <button onclick="newDirectory()">New Directory</button>
+        <button onclick="newFile()">New File</button>
         <button onclick="listRecent()">Recent</button>
         <button onclick="listStarred()">Starred</button>
     </div>
     <div id="content">
         <h1>Simple Online Storage Tool</h1>
-        <label for="serverUrl">Server URL:</label>
-        <input type="text" id="serverUrl" placeholder="Enter server URL">
-        <button onclick="setServerUrl()">Set Server URL</button>
         <div id="breadcrumbs"></div>
         <hr>
         <h2>Directories</h2>

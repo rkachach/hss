@@ -1,12 +1,6 @@
 let serverUrl = 'http://localhost:9000';
 let currentDirectory = '';
 
-function setServerUrl() {
-    serverUrl = document.getElementById('serverUrl').value;
-    alert('Server URL set: ' + serverUrl);
-    listDirectories();
-}
-
 function makeRequest(method, endpoint, queryParams = {}) {
     const url = new URL(serverUrl + endpoint);
     Object.keys(queryParams).forEach(key => url.searchParams.append(key, queryParams[key]));
@@ -100,22 +94,12 @@ function listStarred() {
     // Implement as per your API's functionality
 }
 
-function newOption() {
-    const option = prompt('Enter "directory" to create a new directory or "file" to upload a new file:');
-    if (option === 'directory') {
-        newDirectory();
-    } else if (option === 'file') {
-        newFile();
-    } else {
-        alert('Invalid option entered. Please enter "directory" or "file".');
-    }
-}
-
 function newDirectory() {
     const directoryName = prompt('Enter new directory name:');
     if (directoryName) {
-        makeRequest('POST', '/CreateDirectory', { type: 'directory', name: directoryName });
+        makeRequest('POST', '/' + directoryName, { type: 'directory'});
     }
+    listDirectories()
 }
 
 function newFile() {
@@ -123,29 +107,53 @@ function newFile() {
     fileInput.type = 'file';
     fileInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
+        const filename = event.target.value.split(/(\\|\/)/g).pop(); // Extracts the filename from the path
         if (file) {
-            uploadFile(file);
+            uploadFile(file, filename);
         }
     });
+    // Append the file input to the body to trigger the file selection dialog
+    document.body.appendChild(fileInput);
     fileInput.click();
+    // Remove the file input from the body after selection (optional)
+    fileInput.addEventListener('change', () => {
+        document.body.removeChild(fileInput);
+    });
+
 }
 
-function uploadFile(file) {
+function uploadFile(file, filename) {
+    console.log("Uploading -> "+filename)
     const formData = new FormData();
     formData.append('file', file);
     console.log(currentDirectory);
 
-    return fetch(serverUrl + '/' + currentDirectory + '/' + file.name + '?type=file', {
+    queryParams = { type: 'file'}
+    const url = new URL(serverUrl + '/' + currentDirectory + '/' + filename);
+    Object.keys(queryParams).forEach(key => url.searchParams.append(key, queryParams[key]));
+
+    fetch(url, {
         method: 'POST',
         body: formData,
+        headers: {
+            'Content-Type': 'application/octet-stream',
+	    'Content-Disposition': `attachment; filename="${filename}"`
+        }
     })
-    .then(response => response.json())
-    .then(data => {
-        console.log(data);
-        // Handle the response data here
-        // You can update the UI or perform further actions based on the response
+    .then(response => {
+        if (response.ok) {
+            // Handle successful response
+            console.log('File uploaded successfully!');
+	    listDirectories()
+        } else {
+            // Handle error response
+            console.error('Failed to upload file.');
+        }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        // Handle fetch error
+        console.error('Error:', error);
+    });
 }
 
 function goToParent() {
