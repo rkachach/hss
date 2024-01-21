@@ -102,8 +102,27 @@ function showContextMenu(event, file, filesDiv, button) {
 }
 
 function downloadFile(filename) {
-    // Logic to download the file
-    console.log(`Downloading file: ${filename}`);
+    const serverUrl = 'http://localhost:9000';
+
+    // Encode the filename and directoryName to handle special characters
+    const encodedFilename = encodeURIComponent(filename);
+
+    // Construct the download URL
+    const downloadUrl = `${serverUrl}/${currentDirectory}/${encodedFilename}?type=file`;
+
+    // Create a link element and set its attributes
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = filename;
+
+    // Append the link to the document
+    document.body.appendChild(link);
+
+    // Trigger a click on the link to start the download
+    link.click();
+
+    // Remove the link from the document
+    document.body.removeChild(link);
 }
 
 function showDetails(filename) {
@@ -212,37 +231,33 @@ function newFile() {
 }
 
 function uploadFile(file, filename) {
-    console.log("Uploading -> "+filename)
+    console.log("Uploading -> " + filename);
+
     const formData = new FormData();
     formData.append('file', file);
-    console.log(currentDirectory);
 
-    queryParams = { type: 'file'}
+    queryParams = { type: 'file' };
     const url = new URL(serverUrl + '/' + currentDirectory + '/' + filename);
     Object.keys(queryParams).forEach(key => url.searchParams.append(key, queryParams[key]));
 
     fetch(url, {
         method: 'POST',
         body: formData,
-        headers: {
-            'Content-Type': 'application/octet-stream',
-	    'Content-Disposition': `attachment; filename="${filename}"`
+    })
+    .then(response => {
+        if (response.ok) {
+            // Handle successful response
+            console.log('File uploaded successfully!');
+            listDirectories();
+        } else {
+            // Handle error response
+            console.error('Failed to upload file.');
         }
     })
-	.then(response => {
-            if (response.ok) {
-		// Handle successful response
-		console.log('File uploaded successfully!');
-		listDirectories()
-            } else {
-		// Handle error response
-		console.error('Failed to upload file.');
-            }
-	})
-	.catch(error => {
-            // Handle fetch error
-            console.error('Error:', error);
-	});
+    .catch(error => {
+        // Handle fetch error
+        console.error('Error:', error);
+    });
 }
 
 function goToParent() {

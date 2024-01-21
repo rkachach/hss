@@ -68,10 +68,34 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 
 	filePath, err := url.QueryUnescape(filePath)
 	fileInfo, err := store.StartFileUpload(filePath, getMedataFromQuery(r))
-	if err == nil {
-		filePartData, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Error when creating a new upload", http.StatusNotFound)
+		return
+	}
+
+	// Parse the multipart form data
+	reader, err := r.MultipartReader()
+	if err != nil {
+		fmt.Printf("Error parsing req: %q\n", err)
+		http.Error(w, "Error parsing multipart form", http.StatusBadRequest)
+		return
+	}
+
+	// Iterate over parts in the multipart form
+	for {
+		part, err := reader.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			http.Error(w, "Error reading part of the multipart form", http.StatusBadRequest)
+			return
+		}
+
+		// Read the file content directly
+		filePartData, err := io.ReadAll(part)
 		if err != nil && err != io.EOF {
-			http.Error(w, "Error reading request body", http.StatusBadRequest)
+			http.Error(w, "Error reading file content", http.StatusBadRequest)
 			return
 		}
 
@@ -86,10 +110,6 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 		md5Checksum := hex.EncodeToString(md5Hash[:])
 		fileInfo.MD5sum = md5Checksum
 		store.UpdateFileInfo(filePath, fileInfo)
-
-
-	} else {
-		http.Error(w, "Error when creating a new upload", http.StatusNotFound)
 	}
 
 	w.Header().Set("Content-Type", "application/octet-stream")
