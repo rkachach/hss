@@ -45,4 +45,29 @@ h2 {
     color: #333;
 }
 
-/* Add any additional styles as needed */
+/* Add this to your existing style.css or create a new CSS file */
+.context-menu {
+    display: inline-block; /* Adjusted to inline-block */
+    background-color: #f8f8f8;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.context-menu-item {
+    cursor: pointer;
+    padding: 1px 10px;
+    margin-bottom: 1px;
+    border: none;
+    background-color: #696969;
+    color: white;
+    display: inline-block;
+    text-align: left;
+    text-decoration: none;
+    border-radius: 3px;
+}
+
+.context-menu-item:hover {
+    background-color: #696969;
+}

@@ -59,8 +59,61 @@ function displayFiles(files) {
             // Add space after each button
             const space = document.createTextNode(' ');
             filesDiv.appendChild(space);
+
+            // Add right-click context menu
+            button.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                showContextMenu(event, file, filesDiv, button);
+            });
         });
     }
+}
+
+function showContextMenu(event, file, filesDiv, button) {
+    const contextMenu = document.createElement('div');
+    contextMenu.className = 'context-menu';
+    contextMenu.innerHTML = `
+        <div class="context-menu-item" onclick="downloadFile('${file.name}')">Download</div>
+        <div class="context-menu-item" onclick="showDetails('${file.name}')">Details</div>
+        <div class="context-menu-item" onclick="deleteFile('${file.name}')">Delete</div>
+    `;
+
+    // Calculate the top position relative to the filesDiv
+    const filesDivRect = filesDiv.getBoundingClientRect();
+    const buttonRect = button.getBoundingClientRect();
+    const contextMenuHeight = contextMenu.offsetHeight;
+    const topPosition = buttonRect.top - filesDivRect.top - contextMenuHeight; // Remove the padding
+
+    contextMenu.style.top = `${Math.max(topPosition, 0)}px`;
+    contextMenu.style.left = `0`;
+
+    filesDiv.appendChild(contextMenu);
+
+    // Remove the context menu when clicking outside of it
+    const removeContextMenu = () => {
+	filesDiv.removeChild(contextMenu);
+        if (filesDiv.contains(contextMenu)) {
+            filesDiv.removeChild(contextMenu);
+        }
+        document.removeEventListener('click', removeContextMenu);
+    };
+
+    document.addEventListener('click', removeContextMenu);
+}
+
+function downloadFile(filename) {
+    // Logic to download the file
+    console.log(`Downloading file: ${filename}`);
+}
+
+function showDetails(filename) {
+    // Logic to show details of the file
+    console.log(`Details for file: ${filename}`);
+}
+
+function deleteFile(filename) {
+    // Logic to delete the file
+    console.log(`Deleting file: ${filename}`);
 }
 
 function listDirectories(path) {
@@ -92,7 +145,7 @@ function displayBreadcrumbs() {
         let path = '';
 
         const rootButton = document.createElement('button');
-        rootButton.textContent = '/';
+        rootButton.textContent = 'Drive';
         rootButton.onclick = () => {
             currentDirectory = '';
             listDirectories();
