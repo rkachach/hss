@@ -101,6 +101,31 @@ function showContextMenu(event, file, filesDiv, button) {
     document.addEventListener('click', removeContextMenu);
 }
 
+
+function deleteFile(filename) {
+    console.log("Deleting -> " + filename);
+
+    const url = new URL(serverUrl + '/' + currentDirectory + '/' + filename + '?type=file');
+
+    fetch(url, {
+        method: 'DELETE',
+    })
+    .then(response => {
+        if (response.ok) {
+            // Handle successful response
+            console.log('File deleted successfully!');
+            listDirectories(); // Assuming you want to refresh the file list after deletion
+        } else {
+            // Handle error response
+            console.error('Failed to delete file.');
+        }
+    })
+    .catch(error => {
+        // Handle fetch error
+        console.error('Error:', error);
+    });
+}
+
 function downloadFile(filename) {
     const serverUrl = 'http://localhost:9000';
 
@@ -128,11 +153,6 @@ function downloadFile(filename) {
 function showDetails(filename) {
     // Logic to show details of the file
     console.log(`Details for file: ${filename}`);
-}
-
-function deleteFile(filename) {
-    // Logic to delete the file
-    console.log(`Deleting file: ${filename}`);
 }
 
 function listDirectories(path) {
