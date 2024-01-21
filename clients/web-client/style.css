@@ -1,0 +1,48 @@
+/* style.css */
+
+body {
+    display: flex;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+#sidebar {
+    width: 200px;
+    background-color: #f2f2f2;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+#content {
+    flex: 1;
+    padding: 20px;
+}
+
+button {
+    margin-bottom: 10px;
+    background-color: #808080; /* Use a gray color */
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #696969; /* Darker shade on hover */
+}
+
+#breadcrumbs {
+    margin-bottom: 10px;
+}
+
+hr {
+    border: 0.5px solid #ddd;
+}
+
+h2 {
+    color: #333;
+}
+
+/* Add any additional styles as needed */

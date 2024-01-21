@@ -3,34 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Simple Online Storage Tool</title>
-    <style>
-        body {
-            display: flex;
-            margin: 0;
-            font-family: Arial, sans-serif;
-        }
-
-        #sidebar {
-            width: 200px;
-            background-color: #f2f2f2;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #content {
-            flex: 1;
-            padding: 20px;
-        }
-
-        button {
-            margin-bottom: 10px;
-        }
-
-        #breadcrumbs {
-            margin-bottom: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="sidebar">
@@ -41,7 +14,6 @@
         <button onclick="listStarred()">Starred</button>
     </div>
     <div id="content">
-        <h1>Simple Online Storage Tool</h1>
         <div id="breadcrumbs"></div>
         <hr>
         <h2>Directories</h2>
