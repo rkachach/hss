@@ -19,6 +19,16 @@ import (
 // Right now this is a hacky single store we have.
 var store dataStore.DataStore = dataStore.OsFileSystem{}
 
+func getPathFromQuery(r *http.Request) string {
+	path := mux.Vars(r)["path"]
+	path, err := url.QueryUnescape(path)
+	if err == nil {
+		return path
+	}
+	//TODO: chcek errors
+	return ""
+}
+
 func getMedataFromQuery(r *http.Request) map[string]string {
 	// Split the header value by comma to get individual metadata field names
 	metadataFields := r.Header.Get("Metadata-Fields")
@@ -40,7 +50,7 @@ func getMedataFromQuery(r *http.Request) map[string]string {
 
 func CreateDirectory(w http.ResponseWriter, r *http.Request) {
 
-	dirPath := mux.Vars(r)["path"]
+	dirPath := getPathFromQuery(r)
 	err := store.CreateDirectory(dirPath, getMedataFromQuery(r))
 	if err != nil {
 		// writeErrorResponse(w, errorCodes.ToAPIErr(ErrDirectoryAlreadyExists), r.URL)
@@ -51,7 +61,7 @@ func CreateDirectory(w http.ResponseWriter, r *http.Request) {
 
 func DeleteDirectory(w http.ResponseWriter, r *http.Request) {
 
-	dirPath := mux.Vars(r)["path"]
+	dirPath := getPathFromQuery(r)
 	store.DeleteDirectory(dirPath)
 	// Write success response.
 	w.WriteHeader(http.StatusOK)
@@ -59,14 +69,12 @@ func DeleteDirectory(w http.ResponseWriter, r *http.Request) {
 
 func CreateFile(w http.ResponseWriter, r *http.Request) {
 
-	filePath := mux.Vars(r)["path"]
-	println("path", filePath)
+	filePath := getPathFromQuery(r)
 	if filePath == "" {
 		http.Error(w, "Missing file path", http.StatusBadRequest)
 		return
 	}
 
-	filePath, err := url.QueryUnescape(filePath)
 	fileInfo, err := store.StartFileUpload(filePath, getMedataFromQuery(r))
 	if err != nil {
 		http.Error(w, "Error when creating a new upload", http.StatusNotFound)
@@ -119,8 +127,7 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 
 func GetFile(w http.ResponseWriter, r *http.Request) {
 
-	filePath := mux.Vars(r)["path"]
-	filePath, err := url.QueryUnescape(filePath)
+	filePath := getPathFromQuery(r)
 	fileBytes, err := store.ReadFile(filePath)
 	if err != nil {
 		http.Error(w, "Error reading file ", http.StatusNotFound)
@@ -144,7 +151,7 @@ func GetFile(w http.ResponseWriter, r *http.Request) {
 
 func HeadFile(w http.ResponseWriter, r *http.Request) {
 
-	filePath := mux.Vars(r)["path"]
+	filePath := getPathFromQuery(r)
 	fileInfo, err := store.ReadFileInfo(filePath)
 	if err != nil {
 		http.Error(w, "Error reading file ", http.StatusNotFound)
@@ -160,8 +167,7 @@ func HeadFile(w http.ResponseWriter, r *http.Request) {
 
 func DeleteFile(w http.ResponseWriter, r *http.Request) {
 
-	filePath := mux.Vars(r)["path"]
-
+	filePath := getPathFromQuery(r)
 	err := store.DeleteFile(filePath)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error deleting object: %v", filePath), http.StatusNotFound)
@@ -173,7 +179,7 @@ func DeleteFile(w http.ResponseWriter, r *http.Request) {
 }
 
 func HeadDirectory(w http.ResponseWriter, r *http.Request) {
-	dirPath := mux.Vars(r)["path"]
+	dirPath := getPathFromQuery(r)
 	dirInfo, err := store.GetDirectoryInfo(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -191,7 +197,7 @@ func HeadDirectory(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetDirectory(w http.ResponseWriter, r *http.Request) {
-	dirPath := mux.Vars(r)["path"]
+	dirPath := getPathFromQuery(r)
 	dirInfo, err := store.GetDirectoryInfo(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -214,7 +220,7 @@ func GetDirectory(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListDirectory(w http.ResponseWriter, r *http.Request) {
-	dirPath := mux.Vars(r)["path"]
+	dirPath := getPathFromQuery(r)
 	entries, err := store.ListDirectory(dirPath)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
