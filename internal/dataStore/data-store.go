@@ -236,7 +236,7 @@ func (store OsFileSystem) DeleteFile(filePath string) error {
 
 	err = os.Remove(getFileInfoPath(filePath))
 	if err != nil {
-		config.Logger.Printf("Error When removing info file for %v: %v", filePath, err)
+		config.Logger.Printf("Error When removing file for %v: %v", filePath, err)
 	}
 
 	fmt.Printf("Deleting file: %v\n", getFilePath(filePath))
