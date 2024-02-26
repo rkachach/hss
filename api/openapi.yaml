@@ -1,0 +1,117 @@
+openapi: 3.0.0
+info:
+  title: Directory and File Operations API
+  version: 1.0.0
+paths:
+  /directory:
+    post:
+      summary: Create Directory
+      operationId: CreateDirectory
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [directory]
+      responses:
+        '200':
+          description: Directory created successfully
+    get:
+      summary: List Directory
+      operationId: ListDirectory
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [directory]
+        - name: operation
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [list]
+      responses:
+        '200':
+          description: List of directories returned successfully
+    head:
+      summary: Get Directory
+      operationId: GetDirectory
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [directory]
+      responses:
+        '200':
+          description: Directory details retrieved successfully
+    delete:
+      summary: Delete Directory
+      operationId: DeleteDirectory
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [directory]
+      responses:
+        '200':
+          description: Directory deleted successfully
+  /file:
+    post:
+      summary: Create File
+      operationId: CreateFile
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [file]
+      responses:
+        '200':
+          description: File created successfully
+    get:
+      summary: Get File
+      operationId: GetFile
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [file]
+      responses:
+        '200':
+          description: File retrieved successfully
+    head:
+      summary: Head File
+      operationId: HeadFile
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [file]
+      responses:
+        '200':
+          description: File headers retrieved successfully
+    delete:
+      summary: Delete File
+      operationId: DeleteFile
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [file]
+      responses:
+        '200':
+          description: File deleted successfully
