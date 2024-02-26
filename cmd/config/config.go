@@ -53,8 +53,6 @@ func InitLogger() {
 		log.Fatal(err)
 	}
 
-	// Use log.New to create a new logger for writing logs to the file
-	Logger = log.New(logFile, "", log.Ldate|log.Ltime)
 	// Create a multi-writer to write logs to both stdout and the file
 	multiWriter := io.MultiWriter(os.Stdout, logFile)
 	// Create a logger to write logs to the multi-writer

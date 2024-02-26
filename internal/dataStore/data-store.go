@@ -231,21 +231,18 @@ func (store OsFileSystem) DeleteFile(filePath string) error {
 
 	_, err := store.ReadFileInfo(filePath)
 	if err != nil {
-		return err
-	}
-
-	_, err = store.ReadFileInfo(filePath)
-	if err != nil {
-		return err
+		config.Logger.Printf("Error When reading info file for %v: %v", filePath, err)
 	}
 
 	err = os.Remove(getFileInfoPath(filePath))
 	if err != nil {
-		return &FileError{Op: "Error deleting object", Key: filePath}
+		config.Logger.Printf("Error When removing info file for %v: %v", filePath, err)
 	}
 
+	fmt.Printf("Deleting file: %v\n", getFilePath(filePath))
 	err = os.Remove(getFilePath(filePath))
 	if err != nil {
+		config.Logger.Printf("Error When removing %v", filePath)
 		return &FileError{Op: "Error deleting object", Key: filePath}
 	}
 
