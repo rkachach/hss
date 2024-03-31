@@ -66,6 +66,34 @@ func ListDirectoryWithDetails(dirPath string) ([]EntryInfo, error) {
 	return entries, nil
 }
 
+func GetDirectoryInfo(dirPath string) (map[string]interface{}, error) {
+    info := make(map[string]interface{})
+
+    // Get information about the directory
+    dirInfo, err := os.Stat(dirPath)
+    if err != nil {
+        return nil, err
+    }
+
+    // Fill in directory name and path
+    info["Name"] = filepath.Base(dirPath)
+    info["Path"] = dirPath
+    info["Size"] = dirInfo.Size()
+    info["CreatedTime"] = dirInfo.ModTime()
+
+    // Count files in the directory
+    filesCount := 0
+    filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
+        if !info.IsDir() {
+            filesCount++
+        }
+        return nil
+    })
+    info["FilesCount"] = filesCount
+
+    return info, nil
+}
+
 func ListDirectories(dirPath string) ([]string, error) {
 	var directories []string
 

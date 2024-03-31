@@ -360,26 +360,45 @@ func (store OsFileSystem) CreateDirectory(relativeDirPath string, userMetadata m
 	return nil
 }
 
+func fillDirectoryInfo(info map[string]interface{}) DirectoryInfo {
+    dirInfo := DirectoryInfo{}
+    dirInfo.Name = info["Name"].(string)
+    dirInfo.Path = info["Path"].(string)
+    dirInfo.Size = info["Size"].(int64)
+    dirInfo.FilesCount = info["FilesCount"].(int)
+    dirInfo.CreatedTime = info["CreatedTime"].(time.Time)
+    return dirInfo
+}
+
 func (store OsFileSystem) GetDirectoryInfo(relativeDirPath string) (DirectoryInfo, error) {
 
-	dirPath := getDirectoryInfoPath(relativeDirPath)
-	file, err := os.Open(dirPath)
-	if err != nil {
-		fmt.Println("Error: directory path doesn't exist", dirPath)
-		return DirectoryInfo{}, err
-	}
-	defer file.Close()
-
-	// Decode JSON from the file
-	var bucketInfo DirectoryInfo
-	decoder := json.NewDecoder(file)
-	err = decoder.Decode(&bucketInfo)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return DirectoryInfo{}, err
+	dirInfoPath := getDirectoryInfoPath(relativeDirPath)
+	file, err := os.Open(dirInfoPath)
+	if err == nil {
+		var dirInfo DirectoryInfo
+		defer file.Close()
+		decoder := json.NewDecoder(file)
+		err = decoder.Decode(&dirInfo)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return DirectoryInfo{}, err
+		}
+		return dirInfo, nil
 	}
 
-	return bucketInfo, nil
+	// Directory info file doesn't exist, let's get dir info from filesytem
+	dirPath, err := getDirectoryPath(relativeDirPath)
+	if err != nil {
+		config.Logger.Printf("Cannot get directory info: %v ", dirPath)
+		return DirectoryInfo{}, &DirectoryError{Op: "GetDirecotryInfo", Err: err, Key: relativeDirPath}
+	}
+
+	dirInfoMap, err := fsutils.GetDirectoryInfo(dirPath)
+	if err == nil {
+		return fillDirectoryInfo(dirInfoMap), nil
+	} else {
+		return DirectoryInfo{}, &DirectoryError{Op: "GetDirecotryInfo", Err: err, Key: relativeDirPath}
+	}
 }
 
 func (store OsFileSystem) DeleteDirectory(relativeDirPath string) error {
