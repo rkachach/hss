@@ -45,8 +45,12 @@ var changeDirectory = &cobra.Command{
 	Use:   "cd",
 	Short: "Change current directory",
 	Run: func(cmd *cobra.Command, args []string) {
-		dstDirecotry := currentDirectory + "/" + args[0]
-		currentDirectory = filepath.Clean(dstDirecotry)
+		dstDirecotry := filepath.Clean(currentDirectory + "/" + args[0])
+		if directoryExistsOnServer(dstDirecotry) {
+			currentDirectory = dstDirecotry
+		} else {
+			fmt.Printf("Invalid direcotry: %v\n", dstDirecotry)
+		}
 	},
 }
 
@@ -122,6 +126,16 @@ func sendDelete(url string) []byte {
     return body
 }
 
+func directoryExistsOnServer(direcotryName string) bool {
+	url := fmt.Sprintf("%s/%s?type=%s", baseURL, direcotryName, "directory")
+	resp, err := http.Head(url)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return false
+	}
+	defer resp.Body.Close()
+	return (resp.StatusCode == http.StatusOK)
+}
 
 func sendQuery(url string) []byte{
 
