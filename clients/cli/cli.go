@@ -15,6 +15,8 @@ import (
 // Base URL for the REST API
 const baseURL = "http://localhost:9000"
 
+var currentDirectory = "/"
+
 var rootCmd = &cobra.Command{
 	Use:   "greet",
 	Short: "A simple CLI tool to greet the user",
@@ -28,8 +30,24 @@ var listCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List all files and directories",
 	Run: func(cmd *cobra.Command, args []string) {
-		url := fmt.Sprintf("%s/?type=%s&operation=%s", baseURL, "directory", "list")
+		url := fmt.Sprintf("%s/%s/?type=%s&operation=%s", baseURL, currentDirectory, "directory", "list")
 		showEntries(sendQuery(url), cmd.Flags().Changed("l"))
+	},
+}
+
+var changeDirectory = &cobra.Command{
+	Use:   "cd",
+	Short: "Change current directory",
+	Run: func(cmd *cobra.Command, args []string) {
+		currentDirectory = args[0]
+	},
+}
+
+var showCurrentDirectory = &cobra.Command{
+	Use:   "pwd",
+	Short: "Show current directory",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("%v\n", currentDirectory)
 	},
 }
 
@@ -133,7 +151,15 @@ func main() {
 		case "ls":
 			listCmd.SetArgs(cmdArgs)
 			listCmd.ParseFlags(cmdArgs)
-			listCmd.Run(listCmd, cmdArgs) // Execute listCmd in its own context
+			listCmd.Run(listCmd, cmdArgs)
+		case "cd":
+			changeDirectory.SetArgs(cmdArgs)
+			changeDirectory.ParseFlags(cmdArgs)
+			changeDirectory.Run(listCmd, cmdArgs)
+		case "pwd":
+			showCurrentDirectory.SetArgs(cmdArgs)
+			showCurrentDirectory.ParseFlags(cmdArgs)
+			showCurrentDirectory.Run(listCmd, cmdArgs)
 		case "exit":
 			fmt.Println("Exiting...")
 			os.Exit(0)
