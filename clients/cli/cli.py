@@ -3,11 +3,20 @@ import json
 import os
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.document import Document
 
 # Base URL for the REST API
 BASE_URL = "http://localhost:9000"
 
 current_directory = "/"
+
+commands_with_args = {
+    'ls': ['-l', '-a', '-h'],
+    'cd': [],
+    'pwd': [],
+    'rmdir': [],
+    'exit': []
+}
 
 def send_query(url):
     # Send GET request
@@ -28,8 +37,11 @@ def directory_exists_on_server(directory_name):
 
 def show_entries(response, long_format):
     dir_entries = json.loads(response)
+    commands_with_args['cd'] = []
     if long_format:
         for entry in dir_entries:
+            if entry["type"] == "directory":
+                commands_with_args['cd'].append(entry["name"])
             entry_type = "d" if entry["type"] == "directory" else "-"
             print(f"{entry_type} {entry['name']}")
     else:
@@ -58,35 +70,34 @@ def remove_directory(args):
     print(f"Removing directory {directory_name} -> {url}")
     send_delete(url)
 
-def completer(document):
-    suggestions = []
+def fetch_commands_with_args():
+    # This is just an example implementation.
+    # You can replace it with your own logic to fetch commands and their arguments dynamically.
+    return commands_with_args
 
-    # Populate suggestions from commands
-    suggestions.extend([cmd.name for cmd in [list_cmd, change_directory, remove_directory, show_current_directory]])
-
-    # Add flags to suggestions
-    flags = list_cmd.flags
-    suggestions.extend([f"--{flag.name}" for flag in flags])
-
-    # Add "exit" suggestion
-    suggestions.append("exit")
-
-    return [Completion(suggestion, start_position=-document.cursor_position) for suggestion in suggestions]
-
-
-class SimpleCompleter(Completer):
-    def __init__(self, words):
-        self.words = words
+class CommandCompleter(Completer):
+    def __init__(self):
+        self.commands_with_args = fetch_commands_with_args()
 
     def get_completions(self, document, complete_event):
-        word_before_cursor = document.get_word_before_cursor()
-        matches = [word for word in self.words if word.startswith(word_before_cursor)]
-        for m in matches:
-            yield Completion(m, start_position=-len(word_before_cursor))
+        text_before_cursor = document.text_before_cursor
+        parts = text_before_cursor.split()
+
+        if len(parts) == 1:
+            for command in self.commands_with_args.keys():
+                if command.startswith(parts[0]):
+                    yield Completion(command, -len(parts[0]))
+        elif len(parts) == 2:
+            command = parts[0]
+            if command in self.commands_with_args:
+                for arg in self.commands_with_args[command]:
+                    if arg.startswith(parts[1]):
+                        yield Completion(arg, -len(parts[1]))
 
 def main():
-    completer = SimpleCompleter(['ls', 'cd', 'pwd', 'rmdir', 'exit'])
-    session = PromptSession(completer=completer)
+
+    completer = CommandCompleter()
+    session = PromptSession(completer=completer, complete_while_typing=True)
 
     while True:
         try:
