@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"fmt"
 	"strings"
 	"encoding/json"
@@ -76,22 +77,33 @@ var removeDirectory = &cobra.Command{
 func showEntries(response []byte, longFormat bool){
 
 	// Parse JSON response
-	var files []struct {
+	var dirEntries []struct {
 		Name string `json:"name"`
+		Type          string   `json:"type"`
+		Key          string    `json:"key"`
+		LastModified time.Time `json:"lastModified"`
+		Size         int64     `json:"size"`
 	}
-	err := json.Unmarshal(response, &files)
+	err := json.Unmarshal(response, &dirEntries)
 	if err != nil {
 		fmt.Println("Error parsing JSON:", err)
 		return
 	}
 
 	if longFormat {
-		for _, file := range files {
-			fmt.Printf("- %v\n", file.Name)
+		for _, entry := range dirEntries {
+			entryType := ""
+			if entry.Type == "directory" {
+				entryType = "d"
+			} else {
+				entryType = "-"
+			}
+			//fmt.Printf("%v %v %v\n", entryType, entry.Name, entry.LastModified.Format("Jan 2 15:04"))
+			fmt.Printf("%v %v\n", entryType, entry.Name)
 		}
 	} else {
-		for _, file := range files {
-			fmt.Printf("%v ", file.Name)
+		for _, entry := range dirEntries {
+			fmt.Printf("%v ", entry.Name)
 		}
 		fmt.Println()
 	}
@@ -239,5 +251,7 @@ func main() {
 				fmt.Println("Unknown command:", cmdName)
 			}
 		}
+
+		fmt.Printf("\n")
 	}
 }
