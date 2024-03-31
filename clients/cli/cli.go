@@ -5,6 +5,7 @@ import (
 	"strings"
 	"encoding/json"
 	"io"
+	"path/filepath"
 	"net/http"
 	"os"
 	"github.com/spf13/cobra"
@@ -30,7 +31,12 @@ var listCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List all files and directories",
 	Run: func(cmd *cobra.Command, args []string) {
-		url := fmt.Sprintf("%s/%s/?type=%s&operation=%s", baseURL, currentDirectory, "directory", "list")
+		url := ""
+		if currentDirectory != "/" {
+			url = fmt.Sprintf("%s/%s?type=%s&operation=%s", baseURL, currentDirectory, "directory", "list")
+		} else {
+			url = fmt.Sprintf("%s?type=%s&operation=%s", baseURL, "directory", "list")
+		}
 		showEntries(sendQuery(url), cmd.Flags().Changed("l"))
 	},
 }
@@ -39,7 +45,8 @@ var changeDirectory = &cobra.Command{
 	Use:   "cd",
 	Short: "Change current directory",
 	Run: func(cmd *cobra.Command, args []string) {
-		currentDirectory = args[0]
+		dstDirecotry := currentDirectory + "/" + args[0]
+		currentDirectory = filepath.Clean(dstDirecotry)
 	},
 }
 
