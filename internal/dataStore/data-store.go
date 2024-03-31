@@ -9,7 +9,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
 	"github.com/google/uuid"
 	"github.com/rkachach/hss/cmd/config"
 	fsutils "github.com/rkachach/hss/internal/utils"
@@ -278,8 +277,26 @@ var(
     lock sync.Mutex
 )
 
-func getDirectoryPath(dirPath string) string {
-	return fmt.Sprintf("%s/%s", config.AppConfig.StoreConfig.Root, dirPath)
+func isSubdirectory(parent, child string) bool {
+	relPath, err := filepath.Rel(parent, child)
+	if err != nil {
+		// Error occurred, indicating that the paths are not related
+		return false
+	}
+	// Check if the relative path starts with ".." or "../"
+	return relPath == "." || relPath == ".." || relPath[:3] == "../"
+}
+
+func getDirectoryPath(dirPath string) (string, error) {
+	// Concatenate the directory path with the root directory path
+	finalPath := filepath.Join(config.AppConfig.StoreConfig.Root, dirPath)
+
+	// Check if the directory path contains upward directory traversal
+	if !isSubdirectory(finalPath, config.AppConfig.StoreConfig.Root) {
+		return "", fmt.Errorf("invalid directory path")
+	}
+
+	return finalPath, nil
 }
 
 func getDirectoryInfoPath(dirPath string) string {
@@ -321,7 +338,12 @@ func (store OsFileSystem) CreateDirectory(relativeDirPath string, userMetadata m
 	directoryInfo.Metadata = userMetadata
 
 	// Create a directory if it doesn't exist
-	dirPath := getDirectoryPath(relativeDirPath)
+	dirPath, err := getDirectoryPath(relativeDirPath)
+	if err != nil {
+		config.Logger.Printf("CreateDirectory: %v invalid path", dirPath)
+		return &DirectoryError{Op: "CreateDirectory", Err: err, Key: relativeDirPath}
+	}
+
 	exists, err := fsutils.DirectoryExists(dirPath)
 	if exists {
 		config.Logger.Printf("CreateDirectory: %v already exists", dirPath)
@@ -365,7 +387,12 @@ func (store OsFileSystem) DeleteDirectory(relativeDirPath string) error {
 	lock.Lock()
 	defer lock.Unlock()
 
-	dirPath := getDirectoryPath(relativeDirPath)
+	dirPath, err := getDirectoryPath(relativeDirPath)
+	if err != nil {
+		config.Logger.Printf("DeleteDirectory: %v invalid path", dirPath)
+		return &DirectoryError{Op: "DeleteDirectory", Err: err, Key: relativeDirPath}
+	}
+
 	exists, err := fsutils.DirectoryExists(dirPath)
 	if !exists {
 		config.Logger.Printf("getDirectory: Directory not found")
@@ -386,7 +413,12 @@ func (store OsFileSystem) DeleteDirectory(relativeDirPath string) error {
 }
 
 func (store OsFileSystem) ListDirectory(relativeDirPath string) ([]ElementExtendedInfo, error) {
-	dirPath := getDirectoryPath(relativeDirPath)
+	dirPath, err := getDirectoryPath(relativeDirPath)
+	if err != nil {
+		config.Logger.Printf("Cannot list directory: %v ", dirPath)
+		return nil, &DirectoryError{Op: "ListDirectory", Err: err, Key: relativeDirPath}
+	}
+
 	fmt.Printf("Listing '%v' directory\n", dirPath)
 	var dirEntries []ElementExtendedInfo
 	elements, err := fsutils.ListDirectoryWithDetails(dirPath)
