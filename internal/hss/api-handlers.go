@@ -23,10 +23,15 @@ func getPathFromQuery(r *http.Request) string {
 	path := mux.Vars(r)["path"]
 	path, err := url.QueryUnescape(path)
 	if err == nil {
-		return path
+		if path != "" {
+			return path
+		} else {
+			// in case path has not been populated we use root "/"
+			return "/"
+		}
 	}
 	//TODO: chcek errors
-	return ""
+	return "/"
 }
 
 func getMedataFromQuery(r *http.Request) map[string]string {
