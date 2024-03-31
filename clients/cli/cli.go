@@ -22,7 +22,7 @@ var rootCmd = &cobra.Command{
 	Short: "A simple CLI tool to greet the user",
 	Long:  `greet is a CLI tool that greets the user with a message.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Hello, World!")
+		fmt.Println("Unknown command!")
 	},
 }
 
@@ -51,6 +51,17 @@ var showCurrentDirectory = &cobra.Command{
 	},
 }
 
+var removeDirectory = &cobra.Command{
+	Use:   "rmdir",
+	Short: "Remove directory",
+	Run: func(cmd *cobra.Command, args []string) {
+		dirname := args[0]
+		url := fmt.Sprintf("%s/%s/%s?type=%s", baseURL, currentDirectory, dirname, "directory")
+		fmt.Printf("removing directory %v -> %v \n", args[0], url)
+		sendDelete(url)
+	},
+}
+
 func showEntries(response []byte, longFormat bool){
 
 	// Parse JSON response
@@ -74,6 +85,36 @@ func showEntries(response []byte, longFormat bool){
 		fmt.Println()
 	}
 }
+
+func sendDelete(url string) []byte {
+    // Create a new DELETE request
+    req, err := http.NewRequest("DELETE", url, nil)
+    if err != nil {
+        fmt.Println("Error creating request:", err)
+        return nil
+    }
+
+    // Send the request
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        fmt.Println("Error sending request:", err)
+        return nil
+    }
+    defer resp.Body.Close()
+
+    // Read response body
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        fmt.Println("Error reading response:", err)
+        return nil
+    }
+
+    // Print response
+    //fmt.Println("Response:", string(body))
+    return body
+}
+
 
 func sendQuery(url string) []byte{
 
@@ -130,9 +171,18 @@ func completer(d prompt.Document) []prompt.Suggest {
 	return prompt.FilterHasPrefix(suggestions, d.GetWordBeforeCursor(), true)
 }
 
+func runCmd(cmd *cobra.Command, args []string) {
+	cmd.SetArgs(args)
+	cmd.ParseFlags(args)
+	cmd.Run(cmd, args)
+}
+
 func main() {
 
 	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(changeDirectory)
+	rootCmd.AddCommand(removeDirectory)
+	rootCmd.AddCommand(showCurrentDirectory)
 
 	for {
 		listCmd.ResetFlags()
@@ -149,17 +199,13 @@ func main() {
 
 		switch cmdName {
 		case "ls":
-			listCmd.SetArgs(cmdArgs)
-			listCmd.ParseFlags(cmdArgs)
-			listCmd.Run(listCmd, cmdArgs)
+			runCmd(listCmd, cmdArgs)
 		case "cd":
-			changeDirectory.SetArgs(cmdArgs)
-			changeDirectory.ParseFlags(cmdArgs)
-			changeDirectory.Run(listCmd, cmdArgs)
+			runCmd(changeDirectory, cmdArgs)
 		case "pwd":
-			showCurrentDirectory.SetArgs(cmdArgs)
-			showCurrentDirectory.ParseFlags(cmdArgs)
-			showCurrentDirectory.Run(listCmd, cmdArgs)
+			runCmd(showCurrentDirectory, cmdArgs)
+		case "rmdir":
+			runCmd(removeDirectory, cmdArgs)
 		case "exit":
 			fmt.Println("Exiting...")
 			os.Exit(0)
